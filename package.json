@@ -1,0 +1,27 @@
+{
+  "name": "ngx-build",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/aelbore/ngx-build.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aelbore/ngx-build/issues"
+  },
+  "homepage": "https://github.com/aelbore/ngx-build#readme",
+  "dependencies": {
+    "gulp-base64-inline": "1.0.3",
+    "gulp-inline-ng2-template": "4.1.0",
+    "html-minifier": "3.5.8",
+    "node-sass": "4.7.2",
+    "sprom": "3.0.0",
+    "typescript": "2.6.2"
+  }
+}
