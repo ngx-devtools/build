@@ -5,6 +5,8 @@ const { resolve, join } = require('path');
 const { build } = require('./utils/build');
 const { watch } = require('./utils/watch');
 
+const streamToPromise = require('./utils/stream-to-promise');
+
 if (!(process.env.APP_ROOT_PATH)) {
   process.env.APP_ROOT_PATH = resolve();
 }
