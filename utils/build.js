@@ -2,13 +2,16 @@ const vfs = require('vinyl-fs');
 
 const sourcemaps = require('gulp-sourcemaps');
 const base64 = require('gulp-base64-inline');
-const merge = require('merge2');
-const ts = require('gulp-typescript');
+
+const { createProject } = require('gulp-typescript');
+const { join } = require('path');
 
 const ng2InlineTemplate = require('./ng2-inline-template').ng2InlineTemplate;
-const tsProject = ts.createProject('./tsconfig.json');
+const tsProject = createProject(join(process.env.APP_ROOT_PATH, 'tsconfig.json'));
 
 const config = require('./build-config');
+const destTransform = require('./dest-transform');
+const merge = require('./merge2');
 
 const buildFactory = (src, dest) => {
   const fileSource = (src) ? src : config.build.src;
@@ -21,9 +24,9 @@ const buildFactory = (src, dest) => {
     .pipe(tsProject());
 
   const result = merge([
-    tsResult.dts.pipe(vfs.dest(fileDest)),
+    tsResult.dts.pipe(destTransform(fileDest)),
     tsResult.js.pipe(sourcemaps.write())
-      .pipe(vfs.dest(fileDest))
+      .pipe(destTransform(fileDest))
   ]);
 
   return result;

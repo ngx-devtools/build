@@ -1,6 +1,6 @@
 {
   "name": "ngx-build",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -22,9 +22,7 @@
     "gulp-sourcemaps": "2.6.3",
     "gulp-typescript": "4.0.0-alpha.1",
     "html-minifier": "3.5.8",
-    "merge2": "1.2.1",
     "node-sass": "4.7.2",
-    "sprom": "3.0.0",
     "typescript": "2.6.2"
   }
 }

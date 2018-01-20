@@ -1,24 +1,19 @@
 
 const vfs = require('vinyl-fs');
-
 const chokidar = require('chokidar');
-const { dirname, base, extname } = require('path');
 
 const { watch } = require('./build-config');
 const { build } = require('./build');
 
 let isReady = false;
 
+const log = (event, path) => console.log(`> ${event}: ${path}.`);
+
 const fileWatch = (event, path) => {
-  const utils = {
-    log: (event, path) =>  console.log(`> ${event}: ${path}.`),
-    fileDest: path =>  dirname(path.replace(watch.src, watch.dest))
-  };
+  log(event, path);
 
-  utils.log(event, path);
-
-  const file = path.replace('.scss', '.ts').replace('.css', '.ts');
-  build(file, utils.fileDest(file));
+  const file = path.replace('.scss', '.ts').replace('.css', '.ts').replace('.html', '.ts');
+  build(file, watch.dest);
 };
 
 const watchReady = () => {
@@ -43,7 +38,7 @@ exports.watch = () => {
           case WATCH_EVENT.CHANGE: 
             fileWatch(event, path); break;
           case WATCH_EVENT.DELETE:
-            console.log(`> ${event}: ${path}.`); break;
+            log(event, path); break;
         }
       } 
     });

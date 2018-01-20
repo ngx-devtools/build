@@ -1,5 +1,3 @@
-
-const streamToPromise = require('sprom');
 const rimraf = require('rimraf');
 
 const { resolve, join } = require('path');
@@ -17,7 +15,7 @@ exports.rimraf = async (folderName) => {
     rimraf(directory, (error) => (error) ? reject() : resolve());
   });
 };
-exports.build = async () => await streamToPromise.end(build());
+exports.build = async () => await streamToPromise(build());
 exports.watch = async () => {
   watch(); return Promise.resolve();
 };
