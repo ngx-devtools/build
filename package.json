@@ -1,5 +1,5 @@
 {
-  "name": "ngx-build",
+  "name": "@ngx-devtools/build",
   "version": "0.0.5",
   "description": "",
   "main": "index.js",
