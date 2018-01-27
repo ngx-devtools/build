@@ -1,9 +1,8 @@
+const { resolve, join } = require('path');
 
 if (!(process.env.APP_ROOT_PATH)) {
   process.env.APP_ROOT_PATH = resolve();
 }
-
-const { resolve, join } = require('path');
 
 const { build } = require('./utils/build');
 const { watch } = require('./utils/watch');
