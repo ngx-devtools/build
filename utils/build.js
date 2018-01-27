@@ -6,11 +6,8 @@ const base64 = require('gulp-base64-inline');
 const { createProject } = require('gulp-typescript');
 const { join, resolve } = require('path');
 
-if (!(process.env.APP_ROOT_PATH)) {
-  process.env.APP_ROOT_PATH = resolve();
-}
+const { ng2InlineTemplate } = require('@ngx-devtools/common');
 
-const ng2InlineTemplate = require('./ng2-inline-template').ng2InlineTemplate;
 const tsProject = createProject(join(process.env.APP_ROOT_PATH, 'tsconfig.json'));
 
 const config = require('./build-config');
