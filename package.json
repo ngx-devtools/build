@@ -18,7 +18,7 @@
   "homepage": "https://github.com/aelbore/ngx-build#readme",
   "dependencies": {
     "@ngx-devtools/common": "latest",
-    "gulp-sourcemaps": "2.6.3",
-    "gulp-typescript": "4.0.0-alpha.1"
+    "gulp-sourcemaps": "2.6.4",
+    "gulp-typescript": "4.0.1"
   }
 }
