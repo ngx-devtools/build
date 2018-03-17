@@ -6,7 +6,7 @@ const { build } = require('./build-config');
 
 const mkdirp = require('mkdirp');
 
-const destTransform = (dest) => new Transform({
+const destTransform = dest => new Transform({
   objectMode: true,
   transform (file, enc, done) {
     file.path = (dest) ? file.path.replace(build.dest, dest) : file.path;
@@ -17,7 +17,7 @@ const destTransform = (dest) => new Transform({
     new Promise((resolve, reject) => {
       writeFile(file.path, 
         file.contents.toString('utf8'), 
-        (error) => {
+        error => {
           if (error) reject();
           resolve();
         });

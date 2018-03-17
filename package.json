@@ -17,8 +17,12 @@
   },
   "homepage": "https://github.com/aelbore/ngx-build#readme",
   "dependencies": {
+    "@angular-devkit/build-optimizer": "0.4.5",
     "@ngx-devtools/common": "latest",
     "gulp-sourcemaps": "2.6.4",
-    "gulp-typescript": "4.0.1"
+    "gulp-typescript": "4.0.1",
+    "is-stream": "1.1.0",
+    "ternary-stream": "2.0.1",
+    "gulp-match": "1.0.3"
   }
 }
