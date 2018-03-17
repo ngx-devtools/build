@@ -9,7 +9,17 @@ const { watch } = require('./utils/watch');
 
 const { streamToPromise } = require('@ngx-devtools/common');
 
-exports.build = async () => await streamToPromise(build());
+const argv = require('yargs')
+  .option('watch', { default: false, type: 'boolean', alias: 'w' })
+  .argv;
+
+exports.build = () => { 
+  return streamToPromise(build())
+    .then(() => {
+      if (argv['watch'] && argv.watch === true) watch();
+      return Promise.resolve();
+    });
+};
 exports.watch = async () => {
   watch(); return Promise.resolve();
 };

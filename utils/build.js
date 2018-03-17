@@ -1,5 +1,6 @@
 const vfs = require('vinyl-fs');
 const base64 = require('gulp-base64-inline');
+const sourcemaps = require('gulp-sourcemaps');
 
 const { createProject } = require('gulp-typescript');
 const { join, resolve } = require('path');
