@@ -19,10 +19,11 @@
   "dependencies": {
     "@angular-devkit/build-optimizer": "0.4.5",
     "@ngx-devtools/common": "latest",
+    "chokidar": "2.0.2",
+    "gulp-match": "1.0.3",
     "gulp-sourcemaps": "2.6.4",
     "gulp-typescript": "4.0.1",
     "is-stream": "1.1.0",
-    "ternary-stream": "2.0.1",
-    "gulp-match": "1.0.3"
+    "ternary-stream": "2.0.1"
   }
 }
