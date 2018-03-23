@@ -13,6 +13,8 @@ const argv = require('yargs')
   .option('watch', { default: false, type: 'boolean', alias: 'w' })
   .argv;
 
+exports.buildRxjs = require('./utils/bundle-rxjs');
+
 exports.build = () => { 
   return streamToPromise(build())
     .then(() => {
