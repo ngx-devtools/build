@@ -28,9 +28,9 @@ const buildFactory = (src, dest) => {
   const hasSourceMap = (argv['sourceMap'] && argv.sourceMap === true);
 
   const tsResult = vfs.src(fileSource)
-    .pipe(pipeIf(hasSourceMap, sourcemaps.init))
     .pipe(ng2InlineTemplate(true))
     .pipe(base64())
+    .pipe(pipeIf(hasSourceMap, sourcemaps.init))
     .pipe(tsProject());
 
   if (!(argv['dts']) || argv.dts === false){
