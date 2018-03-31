@@ -6,7 +6,7 @@ const ternaryStream = require('ternary-stream');
 const { createProject } = require('gulp-typescript');
 const { join, resolve } = require('path');
 
-const { ng2InlineTemplate } = require('@ngx-devtools/common');
+const { ng2InlineTemplate, streamToPromise } = require('@ngx-devtools/common');
 
 const tsProject = createProject(join(process.env.APP_ROOT_PATH, 'tsconfig.json'));
 
