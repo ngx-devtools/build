@@ -10,14 +10,12 @@ const { watch } = require('./utils/watch');
 const { streamToPromise } = require('@ngx-devtools/common');
 
 const buildRxjs = require('./utils/bundle-rxjs');
-const onClientChanged = require('./utils/on-changed');
+const onClientFileChanged = require('./utils/on-changed');
 
 exports.buildRxjs = buildRxjs;
-exports.onClientChanged = onClientChanged;
+exports.onClientFileChanged = onClientFileChanged;
 
-exports.build = () => { 
-  return streamToPromise(build());
-};
+exports.build = () => streamToPromise(build());
 
 exports.watch = () => {
   watch(); return Promise.resolve();
