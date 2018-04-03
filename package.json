@@ -18,9 +18,9 @@
   "homepage": "https://github.com/aelbore/ngx-build#readme",
   "dependencies": {
     "@ngx-devtools/common": "latest",
-    "chokidar": "2.0.2",
+    "chokidar": "2.0.3",
     "gulp-sourcemaps": "2.6.4",
-    "gulp-typescript": "4.0.1",
+    "gulp-typescript": "4.0.2",
     "ternary-stream": "2.0.1",
     "systemjs-builder": "0.16.12"
   }
