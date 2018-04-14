@@ -5,18 +5,13 @@ if (!(process.env.APP_ROOT_PATH)) {
 }
 
 const { build } = require('./utils/build');
-const { watch } = require('./utils/watch');
 
 const { streamToPromise } = require('@ngx-devtools/common');
 
-const buildRxjs = require('./utils/bundle-rxjs');
 const onClientFileChanged = require('./utils/on-changed');
+const vendorBundle = require('./utils/vendor-bundle');
 
-exports.buildRxjs = buildRxjs;
 exports.onClientFileChanged = onClientFileChanged;
+exports.vendorBundle = vendorBundle;
 
 exports.build = () => streamToPromise(build());
-
-exports.watch = () => {
-  watch(); return Promise.resolve();
-};
