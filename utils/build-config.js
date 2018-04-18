@@ -1,6 +1,6 @@
 module.exports = {
   "build": {
-    "src": [ "src/**/*.ts", "!src/**/*.spec.ts" ],
+    "src": [ "src/**/*.ts" ],
     "dest": "dist"
   },
   "watch": {

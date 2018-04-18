@@ -10,8 +10,10 @@ const { streamToPromise } = require('@ngx-devtools/common');
 
 const onClientFileChanged = require('./utils/on-changed');
 const vendorBundle = require('./utils/vendor-bundle');
+const buildAsync = require('./utils/build-async');
 
 exports.onClientFileChanged = onClientFileChanged;
 exports.vendorBundle = vendorBundle;
 
 exports.build = () => streamToPromise(build());
+exports.buildAsync = buildAsync;

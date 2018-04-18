@@ -1,7 +1,9 @@
+
 const vfs = require('vinyl-fs');
 const base64 = require('gulp-base64-inline');
 const sourcemaps = require('gulp-sourcemaps');
 const ternaryStream = require('ternary-stream');
+const Transform = require('stream').Transform;
 
 const { createProject } = require('gulp-typescript');
 const { join, resolve } = require('path');
