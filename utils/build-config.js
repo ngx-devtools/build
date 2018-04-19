@@ -6,5 +6,6 @@ module.exports = {
   "watch": {
     "src": [ "src" ],
     "dest": "dist"
-  }
+  },
+  "cacheBaseDir": "node_modules/.tmp/cache"
 }
