@@ -54,10 +54,10 @@ const destTransform = (dest) => new Transform({
     writeFileAsync(file.path, file.contents);
     done();    
   }
-})
+});
 
-const build = async (filePaths, dest) => {
-  let files = [], cache = {}, cachePath = path.resolve(path.join(config.cacheBaseDir, 'cache.json'));
+const build = (filePaths, dest) => {
+  let files = [];
   filePaths.forEach(filePath => 
     filePath.filter(file => file !== undefined)
       .forEach(file => files.push(file))
@@ -71,7 +71,7 @@ const build = async (filePaths, dest) => {
     vfs.src(files)
       .pipe(ternaryStream(hasSourceMap, sourcemaps.init()))
       .pipe(tsProject()).js
-      .pipe(ternaryStream(hasSourceMap, sourcemaps.write()))
+      .pipe(ternaryStream(hasSourceMap, sourcemaps.write('.')))
       .pipe(destTransform(dest))
   ) : Promise.resolve()
 };
