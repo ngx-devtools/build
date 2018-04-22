@@ -17,11 +17,13 @@
   },
   "homepage": "https://github.com/aelbore/ngx-build#readme",
   "dependencies": {
+    "@angular/compiler": "5.2.9",
+    "@angular/compiler-cli": "5.2.9",
     "@ngx-devtools/common": "latest",
-    "chokidar": "2.0.3",
     "gulp-sourcemaps": "2.6.4",
     "gulp-typescript": "4.0.2",
-    "ternary-stream": "2.0.1",
-    "systemjs-builder": "0.16.12"
+    "rollup": "0.58.1",
+    "systemjs-builder": "0.16.12",
+    "ternary-stream": "2.0.1"
   }
 }
