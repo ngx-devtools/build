@@ -44,13 +44,6 @@ const getDir = (src, dest) => {
 };
   
 /**
- * Copy all inline files
- * @param {list of files} files 
- * @param {destination of the output file} dest 
- */
-const copyFilesAsync = (files, dest) => Promise.all(files.map(file => inlineFileAsync(file, dest)));
-
-/**
  * Get Package Name
  * @param {string content of package.json} content 
  */
@@ -75,20 +68,6 @@ const getTempPath = (file, dest) => {
 
 /** Get source folder */
 const getFolder = (src) => path.basename(path.dirname(src.replace('/**', '')))
-
-/**
- * Get All currect directories und `src` folder
- */
-const getSrcDirectories = () => {
-  const libSrc = `src/${argv.libs}`;
-  return readdirAsync(path.resolve(libSrc))
-    .then(files => {
-      const filePath = (file) => path.resolve(path.join(libSrc, file));
-      const directories = files.filter(file => fs.statSync(filePath(file)).isDirectory());
-      const folders = [`${argv.src}/app/`].concat(directories.map(directory => path.join(libSrc, directory)))
-      return Promise.resolve(folders);
-    });
-};
 
 /**
  * It will inline a template and style
@@ -126,14 +105,11 @@ const inlineFileAsync = (file, dest) => {
 };
 
 /**
- * It will copy package.json file
- * @param {common directory} dir 
+ * Copy all inline files
+ * @param {list of files} files 
+ * @param {destination of the output file} dest 
  */
-const copyPkgFile = (dir) => {
-  const pkgName = getPkgName(dir.pkgFileSrc), destPath = path.join(dir.destBaseDir, 'package.json');
-  Object.assign(dir.pkgFileSrc, { typings: `./${pkgName}.d.ts` });
-  return writeFileAsync(destPath, JSON.stringify(dir.pkgFileSrc, '\t', 2));
-};
+const copyFilesAsync = (files, dest) => Promise.all(files.map(file => inlineFileAsync(file, dest)));
 
 /**
  * This will copy ts and json files
@@ -145,6 +121,16 @@ const copyEntryAsync = (dir) => {
     const content = misc[file].replace('package-name-js', pkgName).replace('package-name', `${pkgName}.js`);
     return writeFileAsync(path.join(dir.destBaseDir, file), content) 
   }));
+};
+
+/**
+ * It will copy package.json file
+ * @param {common directory} dir 
+ */
+const copyPkgFile = (dir) => {
+  const pkgName = getPkgName(dir.pkgFileSrc), destPath = path.join(dir.destBaseDir, 'package.json');
+  Object.assign(dir.pkgFileSrc, { typings: `./${pkgName}.d.ts` });
+  return writeFileAsync(destPath, JSON.stringify(dir.pkgFileSrc, '\t', 2));
 };
 
 /**
@@ -162,6 +148,20 @@ const buildProd = (src, dest) => {
         ngc([ '--project', `${tempFolder}/tsconfig-esm5.json` ]),
         ngc([ '--project', `${tempFolder}/tsconfig-esm2015.json` ])
       ])
+    });
+};
+
+/**
+ * Get All currect directories und `src` folder
+ */
+const getSrcDirectories = () => {
+  const libSrc = `src/${argv.libs}`;
+  return readdirAsync(path.resolve(libSrc))
+    .then(files => {
+      const filePath = (file) => path.resolve(path.join(libSrc, file));
+      const directories = files.filter(file => fs.statSync(filePath(file)).isDirectory());
+      const folders = [`${argv.src}/app/`].concat(directories.map(directory => path.join(libSrc, directory)))
+      return Promise.resolve(folders);
     });
 };
 
