@@ -12,7 +12,8 @@ const {
   writeFileAsync,
   readdirAsync,
   inlineResourcesFromString,
-  copyFiles
+  copyFiles,
+  devtools
 } = require('@ngx-devtools/common');
 
 const config = require('./build-config');
@@ -22,27 +23,8 @@ const misc = require('./misc.json');
 const argv = require('yargs')
   .option('main', { default: 'main', type: 'string' })
   .option('libs', { default: 'libs', type: 'string' })
-  .option('src',  { default: 'src',  type: 'string' })
   .argv;
 
-/**
- * Common directory setup
- * @param {src file or files} src 
- * @param {destination of output file} dest 
- */
-const getDir = (src, dest) => {
-  const tmp = '.tmp', folder = getFolder(src), srcBaseDir = src.replace('/**/*.ts', '');
-  return {
-    folder: folder,
-    files: getFiles(src || config.build.src),
-    destPath: dest || config.build.dest,
-    tmp: tmp,
-    pkgFileSrc: require(path.join(path.resolve(srcBaseDir), 'package.json')),
-    destBaseDir: path.join(path.resolve(tmp), ((folder === 'app') ? argv.main: folder)),
-    srcBaseDir: srcBaseDir
-  }
-};
-  
 /**
  * Get Package Name
  * @param {string content of package.json} content 
@@ -54,16 +36,35 @@ const getPkgName = (content) => {
 };
 
 /**
+ * Common directory setup
+ * @param {src file or files} src 
+ * @param {destination of output file} dest 
+ */
+const getDir = (src, dest) => {
+  const tmp = '.tmp', folder = getFolder(src), srcBaseDir = src.replace('/**/*.ts', '');
+  const pkgFileSrc = require(path.join(path.resolve(srcBaseDir), 'package.json'));
+  const pkgName = getPkgName(pkgFileSrc);
+  return {
+    folder: folder,
+    files: getFiles(src),
+    destPath: dest || config.build.dest,
+    tmp: tmp,
+    pkgName: pkgName,
+    pkgFileSrc: pkgFileSrc,
+    destBaseDir: path.join(path.resolve(tmp), pkgName),
+    srcBaseDir: srcBaseDir
+  }
+};
+
+/**
  * Get the Temporary path
  * @param {sourc file} file 
  * @param {destination file} dest 
  */
-const getTempPath = (file, dest) => { 
-  const dirName = path.dirname(file);
-  const moduleDirName = path.basename(dirName);
-  return file.replace(getSource(file), dest)
-    .replace(`/${argv.libs}/${moduleDirName}`, `/${moduleDirName}/${argv.src}`)
-    .replace(`/app`, `/${argv.main}/${argv.src}`);
+const getTempPath = (file, dir) => { 
+  return file.replace('src', `${dir.tmp}`)
+    .replace(`/${argv.libs}/${dir.pkgName}`, `/${dir.pkgName}/src`)
+    .replace(`/app`, `/${dir.pkgName}/src`);
 };
 
 /** Get source folder */
@@ -87,8 +88,8 @@ const copyFileAsync = (file, dest) => {
  * @param {ts source file} file 
  * @param {destination of inline ts file} dest 
  */
-const inlineFileAsync = (file, dest) => {
-  const tempPath = getTempPath(file, dest);
+const inlineFileAsync = (file, dir) => {
+  const tempPath = getTempPath(file, dir);
   return copyFileAsync(file, tempPath)
     .then(contents => {
       const cachePath = file.replace(getSource(file), config.cacheBaseDir);
@@ -109,7 +110,7 @@ const inlineFileAsync = (file, dest) => {
  * @param {list of files} files 
  * @param {destination of the output file} dest 
  */
-const copyFilesAsync = (files, dest) => Promise.all(files.map(file => inlineFileAsync(file, dest)));
+const copyFilesAsync = (files, dir) => Promise.all(files.map(file => inlineFileAsync(file, dir)));
 
 /**
  * This will copy ts and json files
@@ -129,19 +130,22 @@ const copyEntryAsync = (dir) => {
  */
 const copyPkgFile = (dir) => {
   const pkgName = getPkgName(dir.pkgFileSrc), destPath = path.join(dir.destBaseDir, 'package.json');
-  Object.assign(dir.pkgFileSrc, { typings: `./${pkgName}.d.ts` });
+  if (!(dir.pkgFileSrc['typings'])) {
+    Object.assign(dir.pkgFileSrc, { typings: `./${pkgName}.d.ts` });
+  }
   return writeFileAsync(destPath, JSON.stringify(dir.pkgFileSrc, '\t', 2));
 };
 
 /**
  * BuildAsync files
+ * TODO: argv.src should the arg parameter of the build
  * @param {source of typescript file} src 
  * @param {destination where to write or save transpile file} dest 
  */
 const buildProd = (src, dest) => {
   const dir = getDir(src, dest);
   mkdirp(path.resolve(dir.destBaseDir));
-  return Promise.all([ copyPkgFile(dir), copyEntryAsync(dir), Promise.all(dir.files.map(filePaths => copyFilesAsync(filePaths, dir.tmp))) ])
+  return Promise.all([ copyPkgFile(dir), copyEntryAsync(dir), Promise.all(dir.files.map(filePaths => copyFilesAsync(filePaths, dir))) ])
     .then(() => {
       const tempFolder = path.join(dir.tmp, getFolder(src)).replace('app', argv.main);
       return Promise.all([
@@ -156,26 +160,25 @@ const buildProd = (src, dest) => {
  */
 const getSrcDirectories = () => {
   const libSrc = `src/${argv.libs}`;
-  return readdirAsync(path.resolve(libSrc))
-    .then(files => {
-      const filePath = (file) => path.resolve(path.join(libSrc, file));
-      const directories = files.filter(file => fs.statSync(filePath(file)).isDirectory());
-      const folders = [`${argv.src}/app/`].concat(directories.map(directory => path.join(libSrc, directory)))
-      return Promise.resolve(folders);
-    });
+  return (devtools['build'] && devtools.build['prod'])
+    ? Promise.resolve(devtools.build['prod'].src.map(directory => directory.replace('/**/*.ts', '')))
+    : readdirAsync(path.resolve(libSrc)).then(files => {
+        const filePath = (file) => path.resolve(path.join(libSrc, file));
+        const directories = files.filter(file => fs.statSync(filePath(file)).isDirectory());
+        const folders = ['src/app/'].concat(directories.map(directory => path.join(libSrc, directory)))
+        return Promise.resolve(folders);
+      });
 };
 
 /**
  * Execute the build with current directories
  */
 const build = () => {
-  return getSrcDirectories()
-    .then(directories => {
-      const folders = directories.map(folder => path.join(folder, '/**/*.ts'));
-      return Promise.all(folders.map(folder => buildProd(folder)))
-    });
+  return getSrcDirectories().then(directories => {
+    const folders = directories.map(folder => path.join(folder, '/**/*.ts'));
+    return Promise.all(folders.map(folder => buildProd(folder)))
+  });
 };
 
 exports.build = build;
 exports.buildProd = buildProd;
-exports.copyPkgFile = copyPkgFile;
