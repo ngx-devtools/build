@@ -17,8 +17,8 @@
   },
   "homepage": "https://github.com/aelbore/ngx-build#readme",
   "dependencies": {
-    "@angular/compiler": "5.2.9",
-    "@angular/compiler-cli": "5.2.9",
+    "@angular/compiler": "5.2.10",
+    "@angular/compiler-cli": "5.2.10",
     "@ngx-devtools/common": "latest",
     "gulp-sourcemaps": "2.6.4",
     "gulp-typescript": "4.0.2",

@@ -98,9 +98,9 @@ const inlineFileAsync = (file, dir) => {
         : Promise.all([ 
           Promise.resolve(tempPath),
           new Promise((resolve, reject) => {
-            mkdirp(path.dirname(cachePath));
-            return writeFileAsync(cachePath, contents[0])
-          })
+            mkdirp(path.dirname(cachePath)); 
+            resolve(cachePath);
+          }).then(cachePath => writeFileAsync(cachePath, contents[0]))
         ]);
     });
 };
@@ -138,7 +138,6 @@ const copyPkgFile = (dir) => {
 
 /**
  * BuildAsync files
- * TODO: argv.src should the arg parameter of the build
  * @param {source of typescript file} src 
  * @param {destination where to write or save transpile file} dest 
  */
@@ -160,7 +159,7 @@ const buildProd = (src, dest) => {
  */
 const getSrcDirectories = () => {
   const libSrc = `src/${argv.libs}`;
-  return (devtools['build'] && devtools.build['prod'])
+  return (devtools && devtools['build'] && devtools.build['prod'])
     ? Promise.resolve(devtools.build['prod'].src.map(directory => directory.replace('/**/*.ts', '')))
     : readdirAsync(path.resolve(libSrc)).then(files => {
         const filePath = (file) => path.resolve(path.join(libSrc, file));
