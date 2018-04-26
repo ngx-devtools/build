@@ -3,6 +3,7 @@ const path = require('path');
 const util = require('util');
 
 const ngc = require('@angular/compiler-cli/src/main').main;
+const rollup = require('./rollup');
 
 const { 
   getFiles, 
@@ -136,6 +137,23 @@ const copyPkgFile = (dir) => {
   return writeFileAsync(destPath, JSON.stringify(dir.pkgFileSrc, '\t', 2));
 };
 
+const copyAssets = (folder, dest) => {
+  const files = getFiles([ `.tmp/${folder}/esm2015/**/*.d.ts`, `.tmp/${folder}/esm2015/*.json` ]);
+  const paths = files.map(file => {
+    const values = [];
+    file.forEach(value => values.push(value));
+    return values.join(',');
+  })
+  .join(',')
+  .split(',');
+  return Promise.all(paths.map(pathFile => {
+    const destPath = pathFile.replace('.tmp', dest).replace('esm2015', '');
+    mkdirp(path.dirname(destPath));
+    return readFileAsync(pathFile)
+      .then(content => writeFileAsync(destPath, content));
+  }));  
+};
+
 /**
  * BuildAsync files
  * @param {source of typescript file} src 
@@ -151,7 +169,7 @@ const buildProd = (src, dest) => {
         ngc([ '--project', `${tempFolder}/tsconfig-esm5.json` ]),
         ngc([ '--project', `${tempFolder}/tsconfig-esm2015.json` ])
       ])
-    });
+    }).then(() => Promise.all([ copyAssets(dir.pkgName, dir.destPath), rollup(dir.pkgName, dir.destPath) ]));
 };
 
 /**
