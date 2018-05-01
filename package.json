@@ -23,6 +23,7 @@
     "gulp-sourcemaps": "2.6.4",
     "gulp-typescript": "4.0.2",
     "rollup": "0.58.1",
+    "rollup-plugin-replace": "2.0.0",
     "systemjs-builder": "0.16.12",
     "ternary-stream": "2.0.1"
   }
