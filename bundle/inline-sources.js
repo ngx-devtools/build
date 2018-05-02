@@ -3,7 +3,6 @@ const path = require('path');
 const { mkdirp, getFiles, readFileAsync, writeFileAsync, inlineResourcesFromString } = require('@ngx-devtools/common');
 
 const argv = require('yargs')
-  .option('main', { default: 'main', type: 'string' })
   .option('libs', { default: 'libs', type: 'string' })
   .argv;
 

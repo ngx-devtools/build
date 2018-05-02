@@ -1,5 +1,5 @@
 const util = require('util');
-const memoize = require('fast-memoize');
+const { memoize } = require('@ngx-devtools/common'); 
 
 const getPkgName = (content) => {
   if (util.isString(content)) content = JSON.parse(content);

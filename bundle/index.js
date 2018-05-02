@@ -8,6 +8,7 @@ const { inlineSources } = require('./inline-sources');
 const { compile } = require('./ngc');
 const { copyAssetFiles } = require('./copy-assets');
 const { getSrcDirectories } = require('./directories');
+const { rollupConfigs } = require('./rollup.config');
 
 const rollup = require('../utils/rollup');
 
@@ -30,10 +31,7 @@ const bundle = (src, dest) => {
         .then(() => Promise.resolve(folderTempBaseDir)); 
     })
     .then(tmpSrc => compile(tmpSrc))
-    .then(tmpSrc => {
-      const pkgName = path.basename(tmpSrc);
-      return Promise.all([ copyAssetFiles(tmpSrc, 'dist'), rollup(pkgName, 'dist') ]);
-    });
+    .then(tmpSrc => Promise.all([ copyAssetFiles(tmpSrc, 'dist'), rollup(tmpSrc, 'dist') ]));
 };
 
 /**
@@ -53,3 +51,4 @@ exports.inlineSources = inlineSources;
 exports.compile = compile;
 exports.copyAssetFiles = copyAssetFiles;
 exports.getSrcDirectories = getSrcDirectories;
+exports.rollupConfigs = rollupConfigs;

@@ -1,9 +1,13 @@
 const path = require('path');
+const fs = require('fs');
 
-const { writeFileAsync, mkdirp} = require('@ngx-devtools/common');
+const { writeFileAsync, mkdirp, memoize } = require('@ngx-devtools/common');
 const { rollup } = require('rollup');
 
-const { inputOptions, outputOptions } = require('./rollup-config');
+const { rollupConfigs } = require('../bundle/rollup.config');
+
+const rollupConfigCachePath = path.resolve('node_modules/.tmp/cache/rollup.config.json');
+const rollupConfigCache = fs.existsSync(rollupConfigCachePath) ? require(rollupConfigCachePath) : {};
 
 const bundleRollup = async (config, dest) => {
   const bundle = await rollup(config.inputOptions);
@@ -16,23 +20,19 @@ const bundleRollup = async (config, dest) => {
   ]);
 };
 
-const createConfig = (format) => {
-  return { 
-    inputOptions: { ...inputOptions, ...format.input },
-    outputOptions: { ...outputOptions, ...format.output }
-  };
+const writeToCache = async (rollupConfig, override) => {
+  console.log(override);
+  rollupConfigCache[override.input.input] = rollupConfig.create(override.input, override.output);
+  await writeFileAsync(rollupConfigCachePath, rollupConfigCache);
+  return rollupConfigCache[override.input.input];
 };
 
-module.exports = (folder, dest) => {
-  const formats = [{ 
-      input: { input: `.tmp/${folder}/esm5/${folder}.js` }, 
-      output: { name: folder, file: `${dest}/${folder}/esm5/${folder}.js` },
-    }, { 
-      input: { input: `.tmp/${folder}/esm2015/${folder}.js` }, 
-      output: { name: folder, file: `${dest}/${folder}/esm2015/${folder}.js` }
-  }, {
-    input: { input: `.tmp/${folder}/esm5/${folder}.js` }, 
-    output: { format: 'umd', name: folder, file: `${dest}/${folder}/bundles/${folder}.umd.js` }
-  }];
-  return Promise.all(formats.map(format => bundleRollup(createConfig(format), format.output.file)));
+module.exports = (tmpSrc, dest) => {
+  const rollupConfig = rollupConfigs(tmpSrc, dest); 
+  return Promise.all(rollupConfig.overrides.map(async (override) => {
+    const config = (rollupConfigCache[override.input.input] === undefined) 
+      ? rollupConfigCache[override.input.input] 
+      : await writeToCache(rollupConfig, override);
+    await bundleRollup(config, override.output.file)
+  }))
 };
