@@ -10,23 +10,23 @@ const { copyAssetFiles } = require('./copy-assets');
 const { getSrcDirectories } = require('./directories');
 const { rollupConfigs } = require('./rollup.config');
 
-const rollup = require('../utils/rollup');
+const rollup = require('./rollup');
 
 /**
- * 
+ * Bundle Source files to Angular Standard Libary
  * @param {source file} src 
  * @param {*} dest 
  */
 const bundle = (src, dest) => {
   return copyPackageFile(src, dest)
     .then(pkgName => {
-      const folderTempBaseDir = path.join(path.resolve('.tmp'), pkgName);
-      mkdirp(folderTempBaseDir);
+      const destSrc = path.resolve(dest);
+      const folderTempBaseDir = path.join(destSrc.replace(path.basename(destSrc), '.tmp'), pkgName);
       return Promise.all([ copyEntryFiles(folderTempBaseDir), inlineSources(src, pkgName) ])
         .then(() => Promise.resolve(folderTempBaseDir)); 
     })
     .then(tmpSrc => compile(tmpSrc))
-    .then(tmpSrc => Promise.all([ copyAssetFiles(tmpSrc, 'dist'), rollup(tmpSrc, 'dist') ]));
+    .then(tmpSrc => Promise.all([ copyAssetFiles(tmpSrc, dest), rollup(tmpSrc, dest) ]));
 };
 
 /**
@@ -34,8 +34,8 @@ const bundle = (src, dest) => {
  */
 const bundleFiles = () => {
   return getSrcDirectories().then(directories => {
-    const folders = directories.map(folder => path.join(folder, '**/*.ts'))
-    return Promise.all(folders.map(folder => bundle(folder, 'dist')));
+    const folders = directories.map(folder => Object.assign(folder, { src: path.join(folder.src, '/**/*.ts') }));
+    return Promise.all(folders.map(folder => bundle(folder.src, folder.dest)));
   }).catch(error => console.error(error));
 };
 

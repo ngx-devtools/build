@@ -4,7 +4,7 @@ const fs = require('fs');
 const { writeFileAsync, mkdirp, memoize } = require('@ngx-devtools/common');
 const { rollup } = require('rollup');
 
-const { rollupConfigs } = require('../bundle/rollup.config');
+const { rollupConfigs } = require('./rollup.config');
 
 const rollupConfigCachePath = path.resolve('node_modules/.tmp/cache/rollup.config.json');
 const rollupConfigCache = fs.existsSync(rollupConfigCachePath) ? require(rollupConfigCachePath) : {};

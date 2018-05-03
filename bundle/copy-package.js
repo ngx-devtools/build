@@ -29,15 +29,4 @@ const copyPackageFile = (src, dest) => {
     });
 }
 
-/**
- * Copy all package.json files 
- * @param {array of directory} directories 
- */
-const copyPackageFiles = (directories) => {
-  return Promise.all(directories.map(directory => {
-    return copyPackageFile(directory, 'dist');
-  }));
-};
-
 exports.copyPackageFile = copyPackageFile;
-exports.copyPackageFiles = copyPackageFiles;
