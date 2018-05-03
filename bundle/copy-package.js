@@ -13,7 +13,7 @@ const getPkgName = require('../utils/pkg-name');
  * @param {destination where to write file} dest 
  */
 const copyPackageFile = (src, dest) => {
-  const filePath = path.join(path.resolve(src), 'package.json');
+  const filePath = path.join(path.resolve(src.replace('/**/*.ts', '')), 'package.json');
   return readFileAsync(filePath)
     .then(content => {
       const pkg = JSON.parse(content);

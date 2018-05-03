@@ -20,19 +20,22 @@ const bundleRollup = async (config, dest) => {
   ]);
 };
 
-const writeToCache = async (rollupConfig, override) => {
-  console.log(override);
-  rollupConfigCache[override.input.input] = rollupConfig.create(override.input, override.output);
-  await writeFileAsync(rollupConfigCachePath, rollupConfigCache);
-  return rollupConfigCache[override.input.input];
+const enableCache = (rollupConfig, override) => {
+  return (rollupConfigCache[override.output.file] === undefined)
+    ? (() => {
+      rollupConfigCache[override.output.file] = rollupConfig.create(override.input, override.output);
+      mkdirp(path.dirname(rollupConfigCachePath));
+      return writeFileAsync(rollupConfigCachePath, JSON.stringify(rollupConfigCache))
+          .then(() => Promise.resolve(rollupConfigCache[override.output.file]));
+    })() 
+    : Promise.resolve(rollupConfigCache[override.output.file]);
 };
 
 module.exports = (tmpSrc, dest) => {
   const rollupConfig = rollupConfigs(tmpSrc, dest); 
-  return Promise.all(rollupConfig.overrides.map(async (override) => {
-    const config = (rollupConfigCache[override.input.input] === undefined) 
-      ? rollupConfigCache[override.input.input] 
-      : await writeToCache(rollupConfig, override);
-    await bundleRollup(config, override.output.file)
+  return Promise.all(rollupConfig.overrides.map(override => {
+    return enableCache(rollupConfig, override).then(config => {
+      return bundleRollup(config, override.output.file);
+    }) 
   }))
 };

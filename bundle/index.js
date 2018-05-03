@@ -12,11 +12,6 @@ const { rollupConfigs } = require('./rollup.config');
 
 const rollup = require('../utils/rollup');
 
-const argv = require('yargs')
-  .option('main', { default: 'main', type: 'string' })
-  .option('libs', { default: 'libs', type: 'string' })
-  .argv;
-
 /**
  * 
  * @param {source file} src 
@@ -39,7 +34,8 @@ const bundle = (src, dest) => {
  */
 const bundleFiles = () => {
   return getSrcDirectories().then(directories => {
-    return Promise.all(directories.map(directory => bundle(directory, 'dist')));
+    const folders = directories.map(folder => path.join(folder, '**/*.ts'))
+    return Promise.all(folders.map(folder => bundle(folder, 'dist')));
   }).catch(error => console.error(error));
 };
 

@@ -19,18 +19,29 @@ const copyFileAsync = (file, dest) => {
 };
 
 /**
+ * Generate temporary path
+ * @param {source file} file 
+ * @param {package name} pkgName 
+ */
+const getTempPath = (file, pkgName) => {
+  const tempSource = `.tmp\/${pkgName}\/src`;
+  return file.replace(path.resolve() + '\/', '')
+    .replace('src\/', '')
+    .replace(pkgName, tempSource)
+    .replace(argv.libs + '\/', '')
+    .replace(`app`, tempSource);
+}
+
+/**
 * Copy all inline files
 * @param {list of files} files 
 * @param {destination of the output file} dest 
 */
 const inlineSources = (src, pkgName) => {
-  const files = getFiles(path.join(src, '**/*.ts'));
+  const files = getFiles(src);
   return Promise.all(files.map(filePaths => {
-    return Promise.all(filePaths.map(file => 
-      copyFileAsync(file, file.replace('src', '.tmp')
-        .replace(`/${argv.libs}/${pkgName}`, `/${pkgName}/src`)
-        .replace(`/app`, `/${pkgName}/src`)
-      )
+    return Promise.all(filePaths.map(file =>
+      copyFileAsync(file, getTempPath(file, pkgName))
     ));
   }));
 };
