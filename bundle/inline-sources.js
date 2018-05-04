@@ -25,10 +25,10 @@ const copyFileAsync = (file, dest) => {
  */
 const getTempPath = (file, pkgName) => {
   const tempSource = `.tmp\/${pkgName}\/src`;
-  return file.replace(path.resolve() + '\/', '') 
-    .replace('src\/', '')
+  return file.replace(path.resolve() + path.sep, '') 
+    .replace('src' + path.sep, '')
     .replace(pkgName, tempSource)
-    .replace(argv.libs + '\/', '')
+    .replace(argv.libs + path.sep, '')
     .replace(`app`, tempSource);
 }
 
