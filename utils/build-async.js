@@ -27,8 +27,6 @@ const argv = require('yargs')
 
 const hasSourceMap = () => (argv['sourceMap'] && argv.sourceMap === true);
 
-const copyFilesAsync = (files, dest) => Promise.all(files.map(file => inlineFileAsync(file, dest)));
-
 /**
  * Inline templateUrl path to html text, inline stylesUrl to css text
  * convert the scss path to css
@@ -38,9 +36,9 @@ const copyFilesAsync = (files, dest) => Promise.all(files.map(file => inlineFile
 const inlineFileAsync = (file, dest) => {
   return copyFileAsync(file, '.tmp')
     .then(content => {
-      const tempPath = file.replace(getSource(file), '.tmp');
-      const cachePath = file.replace(getSource(file), config.cacheBaseDir);
-      const outDirFile = file.replace(getSource(file), dest).replace('.ts', '.js');
+      const tempPath = file.replace('src', '.tmp');
+      const cachePath = file.replace('src', config.cacheBaseDir);
+      const outDirFile = file.replace('src', dest).replace('.ts', '.js');
       const outDirFileMap = `${outDirFile}.map`;
       if (fs.existsSync(cachePath) 
         && fs.existsSync(outDirFile)
@@ -61,7 +59,7 @@ const inlineFileAsync = (file, dest) => {
  * @param {destination where transpiled js save} dest 
  */
 const buildStream = (files, dest) => {
-  const tsProject = createProject(path.join(process.env.APP_ROOT_PATH, 'tsconfig.json'), { rootDir: '.tmp' });
+  const tsProject = createProject(path.join(process.env.APP_ROOT_PATH, 'tsconfig.json'));
   return vfs.src(files)
     .pipe(ternaryStream(hasSourceMap, sourcemaps.init()))
     .pipe(tsProject()).js
@@ -74,13 +72,11 @@ const buildStream = (files, dest) => {
  * @param {list of file paths return by the inlineSources} filePaths 
  * @param {destination where to write or save transpile file} dest 
  */
-const build = (filePaths, dest) => {
-  let files = [];
-  filePaths.forEach(filePath => 
-    filePath.filter(file => file !== undefined)
-      .forEach(file => files.push(file))
-  );
-  return (files.length > 0) ? streamToPromise(buildStream(files, dest)): Promise.resolve()
+const build = (filePaths = [], dest) => {
+  const files = filePaths.filter(file => (file !== undefined));
+  return (files.length > 0) 
+    ? streamToPromise(buildStream(files, dest))
+    : Promise.resolve()
 };
 
 /**
@@ -89,9 +85,11 @@ const build = (filePaths, dest) => {
  * @param {destination where to write or save transpile file} dest 
  */
 const buildAsync = (src, dest) => {
-  const files = getFiles(src || config.build.src);
-  return Promise.all(files.map(filePaths => copyFilesAsync(filePaths, dest || config.build.dest)))
-    .then(filePaths => build(filePaths, dest || config.build.dest));
+  const destDir = dest || config.build.dest;
+  const files = getFiles(src || config.build.src).join(',').split(',');
+  return Promise.all(files.map(file => inlineFileAsync(file, destDir)))
+    .then(filePaths => build(filePaths, destDir));
 };
 
-module.exports = buildAsync;
+exports.buildAsync = buildAsync;
+exports.inlineFileAsync = inlineFileAsync;

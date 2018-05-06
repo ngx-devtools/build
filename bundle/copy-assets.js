@@ -1,9 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 
-const copyFile = require('util').promisify(fs.copyFile);
-
-const { getFiles, mkdirp} = require('@ngx-devtools/common');
+const { getFiles, mkdirp, copyFile} = require('@ngx-devtools/common');
 
 /**
  * 
@@ -20,7 +18,7 @@ const copyAssetFiles = (tmpSrc, dest) => {
   .join(',')
   .split(',');
   return Promise.all(paths.map(pathFile => {
-    const destPath = pathFile.replace('.tmp', dest).replace('\/esm2015', '');
+    const destPath = pathFile.replace('.tmp', dest).replace(path.sep + 'esm2015', '');
     mkdirp(path.dirname(destPath));
     return copyFile(pathFile, destPath);
   }));

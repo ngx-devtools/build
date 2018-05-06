@@ -12,7 +12,7 @@ const { bundle, bundleFiles } = require('./bundle');
 
 const onClientFileChanged = require('./utils/on-changed');
 const vendorBundle = require('./utils/vendor-bundle');
-const buildAsync = require('./utils/build-async');
+const { buildAsync, inlineFileAsync } = require('./utils/build-async');
 const rollup = require('./bundle/rollup');
 
 exports.onClientFileChanged = onClientFileChanged;
@@ -27,3 +27,4 @@ const build = (isProcess(prodModeParams)) ? bundlProd : buildAsync;
 
 exports.build = build;
 exports.rollup = rollup;
+exports.inlineFileAsync = inlineFileAsync;
