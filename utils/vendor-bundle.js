@@ -11,7 +11,8 @@ const angularBundle = (dest) => {
     'node_modules/@angular/platform-browser/bundles/platform-browser.umd.min.js',
     'node_modules/@angular/platform-browser-dynamic/bundles/platform-browser-dynamic.umd.min.js',
     'node_modules/@angular/router/bundles/router.umd.min.js',
-    'node_modules/@angular/forms/bundles/forms.umd.min.js'
+    'node_modules/@angular/forms/bundles/forms.umd.min.js',
+    'node_modules/@angular/elements/bundles/elements.umd.min.js'
   ], dest, 'angular.min.js' ];
   return concatAsync(...angularParams);
 };
@@ -27,7 +28,7 @@ const shimsBundle = (dest) => {
 
 const vendorBundle = (dest = 'node_modules/.tmp', done = () => { }) => {
   return deleteFolderAsync(dest)
-    .then(() => Promise.all([ buildRxjs(done), shimsBundle(dest), angularBundle(dest)  ]));
+    .then(() => Promise.all([ shimsBundle(dest), angularBundle(dest)  ]));
 };
 
 module.exports = vendorBundle;

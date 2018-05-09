@@ -15,12 +15,12 @@ module.exports = done => {
     paths: {
       'n:*': 'node_modules/*',
       'rxjs/*': 'node_modules/rxjs/*.js',
+      "rxjs-compat/*": "node_modules/rxjs-compat/*.js",
       "rxjs/internal-compatibility": "node_modules/rxjs/internal-compatibility/index.js",
       "rxjs/testing": "node_modules/rxjs/testing/index.js",
       "rxjs/ajax": "node_modules/rxjs/ajax/index.js",
       "rxjs/operators": "node_modules/rxjs/operators/index.js",
       "rxjs/webSocket": "node_modules/rxjs/webSocket/index.js",
-      "rxjs-compat/*": "node_modules/rxjs-compat/*.js"
     },
     map: {
       'rxjs': 'n:rxjs',
@@ -28,16 +28,24 @@ module.exports = done => {
     },
     packages: {
       'rxjs': {
-        main: 'Rx.js', 
+        main: 'index.js', 
         defaultExtension: 'js'
       },
       "rxjs-compat": {
-        main: "Rx.js",
+        main: "index.js",
         defaultExtension: "js"
       }
     }
   });
-  return builder.bundle('rxjs', 'node_modules/.tmp/Rx.min.js', options)
+  return builder.bundle(
+    'rxjs/index.js + ' +
+    'rxjs/internal-compatibility/index.js + ' +
+		'rxjs/operators/index.js + ' +
+		'rxjs/ajax/index.js + ' + 
+		'rxjs/websocket/index.js + ' +
+    'rxjs/testing/index.js + ' +
+    'rxjs-compat/index.js ',
+    'node_modules/.tmp/Rx.min.js', options)
     .then(() => done())
     .catch((error) => done(error));
 };

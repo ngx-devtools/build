@@ -6,6 +6,11 @@ const rxjsAutoPlugin = require('../rollup-plugins/rxjs');
 const nodeResolve = require('rollup-plugin-node-resolve');
 const commonjs = require('rollup-plugin-commonjs');
 
+// nodeResolve({ jsnext: true, main: true, module: true }),
+// commonjs({
+//   include: [ "node_modules/rxjs/**" ]
+// })
+
 const configs = {
   inputOptions: {
     treeshake: true,
@@ -15,11 +20,7 @@ const configs = {
         "import * as $": "import $",
         "ObservableInput": ""
       }),
-      rxjsAutoPlugin(),
-      nodeResolve({ jsnext: true, main: true, module: true }),
-      commonjs({
-        include: [ "node_modules/rxjs/**" ]
-      })
+      rxjsAutoPlugin()
     ],
     onwarn (warning) {
       if (warning.code === 'THIS_IS_UNDEFINED') { return; }
