@@ -41,7 +41,7 @@ const inlineSources = (src, pkgName) => {
   const files = getFiles(src);
   return Promise.all(files.map(filePaths => {
     return Promise.all(filePaths.map(file =>
-      copyFileAsync(file, getTempPath(file, pkgName))
+      copyFileAsync(file, getTempPath(file.replace(`${pkgName}${path.sep}src`, pkgName), pkgName))
     ));
   }));
 };

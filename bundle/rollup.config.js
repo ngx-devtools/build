@@ -14,7 +14,7 @@ const configs = {
       }),
       rxjsAutoPlugin()
     ],
-    onwarn: (warning) => {
+    onwarn (warning) {
       if (warning.code === 'THIS_IS_UNDEFINED') { return; }
       console.log("Rollup warning: ", warning.message);
     },
@@ -30,7 +30,7 @@ const configs = {
       "@angular/platform-browser",
       "@angular/platform-browser-dynamic",
       "@angular/elements",
-      "Rx"      
+      "Rx"
     ]
   },
   outputOptions: {
@@ -92,3 +92,4 @@ const rollupConfigs = (tmpSrc, dest) => {
 };
 
 exports.rollupConfigs = rollupConfigs;
+exports.configs = configs;
