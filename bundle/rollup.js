@@ -28,15 +28,18 @@ const bundleRollup = async (config, dest) => {
 
 const updateInputOptions = config => {
   const inputOptions = Object.assign({}, config.inputOptions);
-  [ 'onwarn', 'plugins' ].forEach(value => { inputOptions[value] = configs.inputOptions[value] });
+  [ 'onwarn', 'plugins' ]
+    .forEach(value => { 
+      inputOptions[value] = configs.inputOptions[value]
+    });
   return Promise.resolve(inputOptions);
 };
 
 const updateOutputOptions = (config) => {
-  const cache = require(path.resolve('node_modules/.tmp/cache/rxjs.json'));
-  Object.keys(cache.globals)
-    .filter(value => (!(Object.keys(config.outputOptions.globals).includes(value))))
-    .forEach(key => config.outputOptions['globals'][key] = cache.globals[key]);
+  // const cache = require(path.resolve('node_modules/.tmp/cache/rxjs.json'));
+  // Object.keys(cache.globals)
+  //   .filter(value => (!(Object.keys(config.outputOptions.globals).includes(value))))
+  //   .forEach(key => config.outputOptions['globals'][key] = cache.globals[key]);
 };
 
 const enableCache = (rollupConfig, override) => {
