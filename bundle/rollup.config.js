@@ -38,7 +38,14 @@ const configs = {
       "@angular/platform-browser",
       "@angular/platform-browser-dynamic",
       "@angular/elements",
-      "Rx"
+      "Rx",
+      "rxjs",
+      "rxjs/ajax",
+      "rxjs/operators",
+      "rxjs/testing",
+      "rxjs/webSocket",
+      "rxjs/internal-compatibility",
+      "rxjs-compat"
     ]
   },
   outputOptions: {
@@ -56,7 +63,14 @@ const configs = {
       "@angular/platform-browser": "ng.platformBrowser",
       "@angular/platform-browser-dynamic": "ng.platformBrowserDynamic",
       "@angular/elements": "ng.elements",
-      "Rx": "Rx"
+      "Rx": "Rx",
+      "rxjs": "rxjs",
+      "rxjs/ajax": "rxjs.ajax",
+      "rxjs/operators": "rxjs.operators",
+      "rxjs/testing": "rxjs.testing",
+      "rxjs/webSocket": "rxjs.webSocket",
+      "rxjs/internal-compatibility": "rxjs.internal-compatibility",
+      "rxjs-compat": "rxjs-compat"
     }
   }
 }
