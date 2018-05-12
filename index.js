@@ -12,8 +12,9 @@ const { bundle, bundleFiles } = require('./bundle');
 
 const onClientFileChanged = require('./utils/on-changed');
 const vendorBundle = require('./utils/vendor-bundle');
-const { buildAsync, inlineFileAsync } = require('./utils/build-async');
 const rollup = require('./bundle/rollup');
+
+const { buildAsync, inlineFileAsync } = require('./utils/build-async');
 
 exports.onClientFileChanged = onClientFileChanged;
 exports.vendorBundle = vendorBundle;

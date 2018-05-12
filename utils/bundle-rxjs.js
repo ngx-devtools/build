@@ -1,13 +1,15 @@
 
 const Builder = require('systemjs-builder');
+const promisify = require('util').promisify;
+const fs = require('fs');
 
-module.exports = done => {
+module.exports = () => {
   const options = {
     normalize: true,
     runtime: false,
     sourceMaps: true,
-    sourceMapContents: true,
-    minify: true,
+    sourceMapContents: false,
+    minify: true, 
     mangle: false
   };
   const builder = new Builder('./');
@@ -27,25 +29,17 @@ module.exports = done => {
       'rxjs-compat': 'n:rxjs-compat'
     },
     packages: {
-      'rxjs': {
-        main: 'index.js', 
-        defaultExtension: 'js'
-      },
-      "rxjs-compat": {
-        main: "index.js",
-        defaultExtension: "js"
-      }
+      'rxjs': { main: 'index.js', defaultExtension: 'js' },
+      "rxjs-compat": { main: "index.js", defaultExtension: "js" }
     }
   });
-  return builder.bundle(
-    'rxjs/index.js + ' +
-    'rxjs/internal-compatibility/index.js + ' +
-		'rxjs/operators/index.js + ' +
-		'rxjs/ajax/index.js + ' + 
-		'rxjs/websocket/index.js + ' +
-    'rxjs/testing/index.js + ' +
-    'rxjs-compat/index.js ',
-    'node_modules/.tmp/Rx.min.js', options)
-    .then(() => done())
-    .catch((error) => done(error));
+  return builder.bundle('rxjs + rxjs/Rx', 'node_modules/.tmp/Rx.min.js', options)
+    .then(output => {
+      const writeFile = promisify(fs.writeFile);
+      const code = output.source.replace(/rxjs\/index/gm, 'rxjs');
+      return writeFile('node_modules/.tmp/Rx.min.js', 
+        (options.sourceMaps) 
+          ? code + `\n//# sourceMappingURL=Rx.min.js.map`
+          : code);
+    });
 };

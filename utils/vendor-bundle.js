@@ -1,9 +1,10 @@
 
-const { deleteFolderAsync, concatAsync } = require('@ngx-devtools/common');
+const path = require('path');
+const { deleteFolderAsync, concatAsync, concat } = require('@ngx-devtools/common');
 const buildRxjs = require('./bundle-rxjs');
 
 const angularBundle = (dest) => {
-  const angularParams = [[
+  return concat([
     'node_modules/@angular/core/bundles/core.umd.min.js',
     'node_modules/@angular/common/bundles/common.umd.min.js',
     'node_modules/@angular/common/bundles/common-http.umd.min.js',
@@ -13,9 +14,9 @@ const angularBundle = (dest) => {
     'node_modules/@angular/router/bundles/router.umd.min.js',
     'node_modules/@angular/forms/bundles/forms.umd.min.js',
     'node_modules/@angular/elements/bundles/elements.umd.min.js'
-  ], dest, 'angular.min.js' ];
-  return concatAsync(...angularParams);
+  ], path.join(dest, 'angular.min.js'))
 };
+
 
 const shimsBundle = (dest) => {
   const concatParams = [[ 
@@ -28,7 +29,7 @@ const shimsBundle = (dest) => {
 
 const vendorBundle = (dest = 'node_modules/.tmp', done = () => { }) => {
   return deleteFolderAsync(dest)
-    .then(() => Promise.all([ shimsBundle(dest), angularBundle(dest)  ]));
+    .then(() => Promise.all([ buildRxjs(done), shimsBundle(dest), angularBundle(dest)  ]));
 };
 
 module.exports = vendorBundle;
