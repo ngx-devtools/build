@@ -3,6 +3,14 @@ const path = require('path');
 const replace = require('rollup-plugin-replace');
 const rxjsAutoPlugin = require('../rollup-plugins/rxjs');
 
+const nodeResolve = require('rollup-plugin-node-resolve');
+const commonjs = require('rollup-plugin-commonjs');
+
+// nodeResolve({ jsnext: true, main: true, module: true }),
+// commonjs({
+//   include: [ "node_modules/rxjs/**" ]
+// })
+
 const configs = {
   inputOptions: {
     treeshake: true,
@@ -14,7 +22,7 @@ const configs = {
       }),
       rxjsAutoPlugin()
     ],
-    onwarn: (warning) => {
+    onwarn (warning) {
       if (warning.code === 'THIS_IS_UNDEFINED') { return; }
       console.log("Rollup warning: ", warning.message);
     },
@@ -30,7 +38,14 @@ const configs = {
       "@angular/platform-browser",
       "@angular/platform-browser-dynamic",
       "@angular/elements",
-      "Rx"      
+      "Rx",
+      "rxjs",
+      "rxjs/ajax",
+      "rxjs/operators",
+      "rxjs/testing",
+      "rxjs/webSocket",
+      "rxjs/internal-compatibility",
+      "rxjs-compat"
     ]
   },
   outputOptions: {
@@ -48,7 +63,14 @@ const configs = {
       "@angular/platform-browser": "ng.platformBrowser",
       "@angular/platform-browser-dynamic": "ng.platformBrowserDynamic",
       "@angular/elements": "ng.elements",
-      "Rx": "Rx"
+      "Rx": "Rx",
+      "rxjs": "rxjs",
+      "rxjs/ajax": "rxjs.ajax",
+      "rxjs/operators": "rxjs.operators",
+      "rxjs/testing": "rxjs.testing",
+      "rxjs/webSocket": "rxjs.webSocket",
+      "rxjs/internal-compatibility": "rxjs.internal-compatibility",
+      "rxjs-compat": "rxjs-compat"
     }
   }
 }
@@ -92,3 +114,4 @@ const rollupConfigs = (tmpSrc, dest) => {
 };
 
 exports.rollupConfigs = rollupConfigs;
+exports.configs = configs;

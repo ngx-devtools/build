@@ -25,10 +25,10 @@ const copyFileAsync = (file, dest) => {
  */
 const getTempPath = (file, pkgName) => {
   const tempSource = `.tmp\/${pkgName}\/src`;
-  return file.replace(path.resolve() + '\/', '') 
-    .replace('src\/', '')
+  return file.replace(path.resolve() + path.sep, '') 
+    .replace('src' + path.sep, '')
     .replace(pkgName, tempSource)
-    .replace(argv.libs + '\/', '')
+    .replace(argv.libs + path.sep, '')
     .replace(`app`, tempSource);
 }
 
@@ -41,7 +41,7 @@ const inlineSources = (src, pkgName) => {
   const files = getFiles(src);
   return Promise.all(files.map(filePaths => {
     return Promise.all(filePaths.map(file =>
-      copyFileAsync(file, getTempPath(file, pkgName))
+      copyFileAsync(file, getTempPath(file.replace(`${pkgName}${path.sep}src`, pkgName), pkgName))
     ));
   }));
 };

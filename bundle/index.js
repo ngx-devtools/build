@@ -34,7 +34,9 @@ const bundle = (src, dest) => {
  */
 const bundleFiles = () => {
   return getSrcDirectories().then(directories => {
-    const folders = directories.map(folder => Object.assign(folder, { src: path.join(folder.src, '/**/*.ts') }));
+    const folders = directories.map(folder => 
+      Object.assign(folder, { src: folder.src.split(path.sep).join('/') + '/**/*.ts' })
+    );
     return Promise.all(folders.map(folder => bundle(folder.src, folder.dest)));
   }).catch(error => console.error(error));
 };

@@ -12,21 +12,19 @@ const autoRxjsPlugin = (opts) => {
     .map(file => file.join(','))
     .join(',')
     .split(',');
-    
+  
+  copyConfig['globals'] = {};
+
   files.map(file => file.substr(file.match('rxjs').index, file.length).replace('.js', ''))
     .forEach(file => { 
       if (!(copyConfig.external.find(value => value === file))) {
         copyConfig.external.push(file);
       }
+      if (!(Object.keys(copyConfig['globals']).find(key => key === file))) {
+        copyConfig['globals'][file] = file.split('/').join('.')
+      }
     });
-  if (copyConfig.globals) {
-    files.map(file => file.substr(file.match('rxjs').index, file.length).replace('.js', ''))
-      .forEach(file => {  
-        if (!(Object.keys(copyConfig.globals).find(key => key === file))) {
-          copyConfig.globals[file] = file;
-        }
-      });
-  }
+
   return copyConfig;   
 };
 
@@ -40,7 +38,11 @@ module.exports = () => {
         mkdirp(path.dirname(rxjsPluginCachePath));
         fs.writeFileSync(rxjsPluginCachePath, JSON.stringify(config));
       }
-      return config;
+      const tempOpts =Object.assign({}, opts);
+      const externals = config.external.filter(value => !(tempOpts.external.includes(value)));
+      tempOpts.external = externals.concat(tempOpts.external.filter(value => (value !== '')));
+
+      return tempOpts;
     }
   }
 };
