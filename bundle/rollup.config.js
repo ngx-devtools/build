@@ -3,14 +3,6 @@ const path = require('path');
 const replace = require('rollup-plugin-replace');
 const rxjsAutoPlugin = require('../rollup-plugins/rxjs');
 
-const nodeResolve = require('rollup-plugin-node-resolve');
-const commonjs = require('rollup-plugin-commonjs');
-
-// nodeResolve({ jsnext: true, main: true, module: true }),
-// commonjs({
-//   include: [ "node_modules/rxjs/**" ]
-// })
-
 const configs = {
   inputOptions: {
     treeshake: true,
@@ -45,7 +37,8 @@ const configs = {
       "rxjs/testing",
       "rxjs/webSocket",
       "rxjs/internal-compatibility",
-      "rxjs-compat"
+      "rxjs-compat",
+      "tslib"
     ]
   },
   outputOptions: {
@@ -70,7 +63,8 @@ const configs = {
       "rxjs/testing": "rxjs.testing",
       "rxjs/webSocket": "rxjs.webSocket",
       "rxjs/internal-compatibility": "rxjs.internal-compatibility",
-      "rxjs-compat": "rxjs-compat"
+      "rxjs-compat": "rxjs-compat",
+      "tslib": "tslib"
     }
   }
 }

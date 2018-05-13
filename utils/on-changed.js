@@ -1,10 +1,12 @@
+const path = require('path');
 
-const { buildAsync } = require('./build-async');
 const { watch } = require('./build-config');
-
-const onClientFileChanged = (path) => {
-  const file = path.replace('.scss', '.ts').replace('.css', '.ts').replace('.html', '.ts');
-  return (path && path.includes('src')) ? buildAsync(file, watch.dest) : Promise.resolve();
+const { buildDev } = require('../bundle/build-dev');
+ 
+const onClientFileChanged = src => {
+  const results = src.replace(path.resolve() + path.sep, '').split(path.sep);
+  const dir = (results.includes('app') ? 'src/app' : `src/libs/${results[2]}`) + path.sep + '**/*.ts';
+  return (src && src.includes('src')) ? buildDev(dir, watch.dest) : Promise.resolve();
 };
 
-module.exports = onClientFileChanged;
+exports.onClientFileChanged = onClientFileChanged;

@@ -17,15 +17,15 @@ const angularBundle = (dest) => {
   ], path.join(dest, 'angular.min.js'))
 };
 
-
 const shimsBundle = (dest) => {
-  const concatParams = [[ 
+  return concat([
+    'node_modules/@webcomponents/custom-elements/src/native-shim.js',
+    'node_modules/@webcomponents/custom-elements/custom-elements.min.js',
     'node_modules/core-js/client/shim.min.js', 
     'node_modules/systemjs/dist/system.js',
     'node_modules/zone.js/dist/zone.min.js' 
-  ], dest, 'shims.min.js' ];
-  return concatAsync(...concatParams);
-}
+  ], path.join(dest, 'shims.min.js'));
+};
 
 const vendorBundle = (dest = 'node_modules/.tmp', done = () => { }) => {
   return deleteFolderAsync(dest)

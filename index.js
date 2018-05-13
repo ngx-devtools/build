@@ -8,24 +8,20 @@ const prodModeParams = [ '--prod',  '--prod=true',  '--prod true'  ];
 
 const { isProcess, deleteFolderAsync } = require('@ngx-devtools/common');
 
-const { bundle, bundleFiles } = require('./bundle');
+const { bundle, bundleFiles, buildDev, buildDevAll } = require('./bundle');
+const { onClientFileChanged } = require('./utils/on-changed');
 
-const onClientFileChanged = require('./utils/on-changed');
 const vendorBundle = require('./utils/vendor-bundle');
 const rollup = require('./bundle/rollup');
-
-const { buildAsync, inlineFileAsync } = require('./utils/build-async');
-
-exports.onClientFileChanged = onClientFileChanged;
-exports.vendorBundle = vendorBundle;
 
 const bundlProd = (dest = [ 'dist' ]) => {
   return Promise.all(dest.map(folder => deleteFolderAsync(folder)))
     .then(() => bundleFiles());
 };
 
-const build = (isProcess(prodModeParams)) ? bundlProd : buildAsync;
+const build = (isProcess(prodModeParams)) ? bundlProd : buildDevAll;
 
 exports.build = build;
-exports.rollup = rollup;
-exports.inlineFileAsync = inlineFileAsync;
+exports.buildDev = buildDev;
+exports.onClientFileChanged = onClientFileChanged;
+exports.vendorBundle = vendorBundle;

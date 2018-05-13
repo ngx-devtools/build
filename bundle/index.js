@@ -41,6 +41,10 @@ const bundleFiles = () => {
   }).catch(error => console.error(error));
 };
 
+const { buildDev, buildDevAll } = require('./build-dev');
+
+exports.buildDev = buildDev;
+exports.buildDevAll = buildDevAll;
 exports.bundleFiles = bundleFiles;
 exports.bundle = bundle;
 exports.copyPackageFile = copyPackageFile;
