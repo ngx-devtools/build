@@ -37,8 +37,7 @@ const configs = {
       "rxjs/testing",
       "rxjs/webSocket",
       "rxjs/internal-compatibility",
-      "rxjs-compat",
-      "tslib"
+      "rxjs-compat"
     ]
   },
   outputOptions: {
@@ -62,9 +61,8 @@ const configs = {
       "rxjs/operators": "rxjs.operators",
       "rxjs/testing": "rxjs.testing",
       "rxjs/webSocket": "rxjs.webSocket",
-      "rxjs/internal-compatibility": "rxjs.internal-compatibility",
-      "rxjs-compat": "rxjs-compat",
-      "tslib": "tslib"
+      "rxjs/internal-compatibility": "rxjs.internal.compatibility",
+      "rxjs-compat": "rxjs.compat"
     }
   }
 }
