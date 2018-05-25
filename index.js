@@ -8,6 +8,7 @@ const prodModeParams = [ '--prod',  '--prod=true',  '--prod true'  ];
 
 const { isProcess, deleteFolderAsync } = require('@ngx-devtools/common');
 
+const { attachedToIndexHtml  } = require('./utils/systemjs-script-min');
 const { bundle, bundleFiles, buildDev, buildDevAll } = require('./bundle');
 const { onClientFileChanged } = require('./utils/on-changed');
 
@@ -25,3 +26,4 @@ exports.build = build;
 exports.buildDev = buildDev;
 exports.onClientFileChanged = onClientFileChanged;
 exports.vendorBundle = vendorBundle;
+exports.attachedToIndexHtml = attachedToIndexHtml;
