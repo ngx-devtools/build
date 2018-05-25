@@ -14,6 +14,15 @@ const minifyNativeShim = (dest) => {
     });
 };
 
+const minifyLiveReloadJS = (dest) => {
+  return minify('node_modules/livereload-js/dist/livereload.js')
+    .then(content => {
+      const destPath = path.resolve(dest, 'livereload.js');
+      mkdirp(path.dirname(destPath));
+      return writeFileAsync(destPath, content.code);
+    });
+};
+
 const angularBundle = (dest) => {
   return concat([
     'node_modules/@angular/core/bundles/core.umd.min.js',
@@ -44,7 +53,7 @@ const shimsBundle = (dest) => {
 const vendorBundle = (dest = 'node_modules/.tmp', done = () => { }) => {
   return deleteFolderAsync(dest)
     .then(() => minifyNativeShim(dest))
-    .then(() => Promise.all([ buildRxjs(done), minifyScript(), shimsBundle(dest), angularBundle(dest)  ]));
+    .then(() => Promise.all([ buildRxjs(done), minifyLiveReloadJS(dest), minifyScript(), shimsBundle(dest), angularBundle(dest)  ]));
 };
 
 module.exports = vendorBundle;
