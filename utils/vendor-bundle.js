@@ -1,7 +1,18 @@
 
 const path = require('path');
-const { deleteFolderAsync, concatAsync, concat } = require('@ngx-devtools/common');
 const buildRxjs = require('./bundle-rxjs');
+
+const { minifyScript } = require('./systemjs-script-min');
+const { deleteFolderAsync, writeFileAsync, concatAsync, concat, minify, mkdirp } = require('@ngx-devtools/common');
+
+const minifyNativeShim = (dest) => {
+  return minify('node_modules/@webcomponents/custom-elements/src/native-shim.js')
+    .then(content => {
+      const destPath = path.resolve(dest, 'native-shim.min.js');
+      mkdirp(path.dirname(destPath));
+      return writeFileAsync(destPath, content.code) 
+    });
+};
 
 const angularBundle = (dest) => {
   return concat([
@@ -22,7 +33,7 @@ const angularBundle = (dest) => {
 
 const shimsBundle = (dest) => {
   return concat([
-    'node_modules/@webcomponents/custom-elements/src/native-shim.js',
+    path.resolve(dest, 'native-shim.min.js'),
     'node_modules/@webcomponents/custom-elements/custom-elements.min.js',
     'node_modules/core-js/client/shim.min.js', 
     'node_modules/systemjs/dist/system.js',
@@ -32,7 +43,8 @@ const shimsBundle = (dest) => {
 
 const vendorBundle = (dest = 'node_modules/.tmp', done = () => { }) => {
   return deleteFolderAsync(dest)
-    .then(() => Promise.all([ buildRxjs(done), shimsBundle(dest), angularBundle(dest)  ]));
+    .then(() => minifyNativeShim(dest))
+    .then(() => Promise.all([ buildRxjs(done), minifyScript(), shimsBundle(dest), angularBundle(dest)  ]));
 };
 
 module.exports = vendorBundle;
