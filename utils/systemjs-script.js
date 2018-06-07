@@ -1,13 +1,23 @@
 (() => {
+  const importComponents = (files) => {
+    return files.reduce((promise, file) => {
+        switch(typeof file){
+          case "string":
+            return promise.then(() => System.import(file));
+          case "object":
+            if(Array.isArray(file.constructor)){
+              return promise.then(() => Promise.all(file.map(fileMap => System.import(fileMap))));
+            }
+        }
+    }, Promise.resolve());
+  }
   fetch('/api/config')
     .then(res => res.json())
     .then(data => {
       System.config(data.config);
       const vendors = data.vendors, components = data.components;
       return Promise.all(vendors.map(vendor => System.import(vendor)))
-        .then(() => { 
-          return Promise.all(components.map(component => System.import(component))) 
-        });
+          .then(() => importComponents(components))
     })
     .catch((e) => { console.error(e.stack || e) })
-})()
+})();
