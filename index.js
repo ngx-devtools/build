@@ -6,7 +6,7 @@ if (!(process.env.APP_ROOT_PATH)) {
 
 const prodModeParams = [ '--prod',  '--prod=true',  '--prod true'  ];
 
-const { isProcess, deleteFolderAsync } = require('@ngx-devtools/common');
+const { isProcess, deleteFolderAsync, clean } = require('@ngx-devtools/common');
 
 const { attachedToIndexHtml  } = require('./utils/systemjs-script-min');
 const { bundle, bundleFiles, buildDev, buildDevAll } = require('./bundle');
@@ -16,7 +16,7 @@ const vendorBundle = require('./utils/vendor-bundle');
 const rollup = require('./bundle/rollup');
 
 const bundlProd = (dest = [ 'dist' ]) => {
-  return Promise.all(dest.map(folder => deleteFolderAsync(folder)))
+  return Promise.all(dest.map(folder => clean(folder)))
     .then(() => bundleFiles());
 };
 

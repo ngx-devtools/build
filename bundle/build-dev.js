@@ -6,7 +6,6 @@ const { inlineSources } = require('./inline-sources');
 const { getSrcDirectories } = require('./directories');
 const { mkdirp, writeFileAsync, readFileAsync } = require('@ngx-devtools/common');
 
-const replace = require('rollup-plugin-replace');
 const typescript = require('rollup-plugin-typescript2');
 const rxjsAutoPlugin = require('../rollup-plugins/rxjs');
 
@@ -16,12 +15,6 @@ const rollupDev = (src, dest) => {
   const inputOptions = { 
     ...configs.inputOptions,
     plugins: [
-      replace({
-        "exclude": "node_modules/**",
-        "import * as $": "import $",
-        "ObservableInput": ""
-      }),
-      rxjsAutoPlugin(),
       typescript({ 
         useTsconfigDeclarationDir: true,
         check: false,
@@ -52,7 +45,8 @@ const rollupDev = (src, dest) => {
 }
 
 const readPackageFile = src => {
-  const filePath = path.join(path.resolve(src.replace('/**/*.ts', '')), 'package.json');
+  const source = src.split(path.sep).join('/').replace('/**/*.ts', '');
+  const filePath = path.join(source, 'package.json');
   return readFileAsync(filePath, 'utf8')
     .then(content => {
       const pkg = JSON.parse(content);
