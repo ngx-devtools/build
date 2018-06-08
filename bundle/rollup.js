@@ -1,10 +1,11 @@
 const path = require('path');
 const fs = require('fs');
 
-const { writeFileAsync, mkdirp, memoize } = require('@ngx-devtools/common');
 const { rollup } = require('rollup');
+const { writeFileAsync, mkdirp } = require('@ngx-devtools/common');
 
 const { rollupConfigs, configs } = require('./rollup.config');
+const { minifyUmd } = require('./minify-umd');
 
 const rollupConfigCachePath = path.resolve('node_modules/.tmp/cache/rollup.config.json');
 const rollupConfigCache = fs.existsSync(rollupConfigCachePath) ? require(rollupConfigCachePath) : {};
@@ -20,6 +21,9 @@ const bundleRollup = async (config, dest) => {
       const bundlePath = path.resolve(dest);
       mkdirp(path.dirname(bundlePath));
       return Promise.all([ 
+        ((config.outputOptions.format === 'umd') 
+          ? minifyUmd(code, bundlePath) 
+          : Promise.resolve()), 
         writeFileAsync(bundlePath, code + `\n//# sourceMappingURL=${path.basename(bundlePath)}.map`),
         writeFileAsync(bundlePath + '.map', map.toString())
       ])
@@ -57,7 +61,7 @@ module.exports = (tmpSrc, dest) => {
   const rollupConfig = rollupConfigs(tmpSrc, dest); 
   return Promise.all(rollupConfig.overrides.map(override => {
     return enableCache(rollupConfig, override).then(config => {
-      updateInputOptions(config);
+      updateInputOptions(config); 
       return bundleRollup(config, override.output.file);
     }) 
   }))
