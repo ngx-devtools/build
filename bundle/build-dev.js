@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 const { rollup } = require('rollup');
 const { configs } = require('./rollup.config');

@@ -1,64 +1,52 @@
 const path = require('path');
-const fs = require('fs');
+const resolve = require('rollup-plugin-node-resolve');
 
-const { writeFileAsync, mkdirp, memoize } = require('@ngx-devtools/common');
+const { writeFileAsync, mkdirp } = require('@ngx-devtools/common');
+
 const { rollup } = require('rollup');
-
 const { rollupConfigs, configs } = require('./rollup.config');
+const { minifyUmd } = require('./minify-umd');
 
-const rollupConfigCachePath = path.resolve('node_modules/.tmp/cache/rollup.config.json');
-const rollupConfigCache = fs.existsSync(rollupConfigCachePath) ? require(rollupConfigCachePath) : {};
-
-const bundleRollup = async (config, dest) => {
-  return updateInputOptions(config)
-    .then(inputOptions => rollup(inputOptions))
-    .then(bundle => {
-      updateOutputOptions(config);
-      return bundle.generate(config.outputOptions);
-    })
+const bundleRollup = (options) => {
+  return rollup(options.inputOptions)
+    .then(bundle => bundle.generate(options.outputOptions))
     .then(({ code, map }) => {
-      const bundlePath = path.resolve(dest);
+      const bundlePath = path.resolve(options.outputOptions.file);
       mkdirp(path.dirname(bundlePath));
-      return Promise.all([ 
+      return Promise.all([
         writeFileAsync(bundlePath, code + `\n//# sourceMappingURL=${path.basename(bundlePath)}.map`),
         writeFileAsync(bundlePath + '.map', map.toString())
-      ])
-    });
+      ]);  
+    })
 };
 
-const updateInputOptions = config => {
-  const inputOptions = Object.assign({}, config.inputOptions);
-  [ 'onwarn', 'plugins' ]
-    .forEach(value => { 
-      inputOptions[value] = configs.inputOptions[value]
-    });
-  return Promise.resolve(inputOptions);
+const writeBundle = (options) => {
+  const inputOptions = Object.assign({}, options.inputOptions, { 
+    external: [],
+    onwarn: configs.inputOptions.onwarn,
+    plugins: [ resolve({ jsnext: true, main: true, browser: true }) ]
+  });
+  const outputOptions = Object.assign({}, options.outputOptions, { globals: {} });
+  return rollup(inputOptions)
+    .then(bundle => bundle.generate(outputOptions))
+    .then(({ code }) => minifyUmd(code, options.outputOptions.file));
 };
 
-const updateOutputOptions = (config) => {
-  const cache = require(path.resolve('node_modules/.tmp/cache/rxjs.json'));
-  Object.keys(cache.globals)
-    .filter(value => (!(Object.keys(config.outputOptions.globals).includes(value))))
-    .forEach(key => config.outputOptions['globals'][key] = cache.globals[key]);
-};
-
-const enableCache = (rollupConfig, override) => {
-  return (rollupConfigCache[override.output.file] === undefined)
-    ? (() => {
-      rollupConfigCache[override.output.file] = rollupConfig.create(override.input, override.output);
-      mkdirp(path.dirname(rollupConfigCachePath));
-      return writeFileAsync(rollupConfigCachePath, JSON.stringify(rollupConfigCache))
-          .then(() => Promise.resolve(rollupConfigCache[override.output.file]));
-    })() 
-    : Promise.resolve(rollupConfigCache[override.output.file]);
-};
-
-module.exports = (tmpSrc, dest) => {
+const bundleCode = (tmpSrc, dest) => {
   const rollupConfig = rollupConfigs(tmpSrc, dest); 
   return Promise.all(rollupConfig.overrides.map(override => {
-    return enableCache(rollupConfig, override).then(config => {
-      updateInputOptions(config);
-      return bundleRollup(config, override.output.file);
-    }) 
+    const config = rollupConfig.create(override.input, override.output);
+    const inputOptions = Object.assign({}, config.inputOptions, { 
+      plugins: configs.inputOptions.plugins, 
+      onwarn: configs.inputOptions.onwarn 
+    });
+    const options = { inputOptions: inputOptions, outputOptions: config.outputOptions };
+    return Promise.all([
+      ((config.outputOptions.format === 'umd') 
+        ? writeBundle(options) : Promise.resolve()), 
+      bundleRollup(options)
+    ]);
   }))
 };
+
+module.exports = bundleCode;

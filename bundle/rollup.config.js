@@ -11,8 +11,7 @@ const configs = {
         "exclude": "node_modules/**",
         "import * as $": "import $",
         "ObservableInput": ""
-      }),
-      rxjsAutoPlugin()
+      })
     ],
     onwarn (warning) {
       if (warning.code === 'THIS_IS_UNDEFINED') { return; }
