@@ -1,11 +1,11 @@
 const path = require('path');
+const fs = require('fs');
 
 const { rollup } = require('rollup');
 const { configs } = require('./rollup.config');
 const { inlineSources } = require('./inline-sources');
 const { getSrcDirectories } = require('./directories');
 const { mkdirp, writeFileAsync, readFileAsync } = require('@ngx-devtools/common');
-const { uglify } = require('../rollup-plugins/uglify');
 
 const typescript = require('rollup-plugin-typescript2');
 const rxjsAutoPlugin = require('../rollup-plugins/rxjs');
@@ -20,8 +20,7 @@ const rollupDev = (src, dest) => {
         useTsconfigDeclarationDir: true,
         check: false,
         cacheRoot: path.resolve('node_modules/.tmp/.rts2_cache')
-      }),
-      uglify()
+      })
     ],
     onwarn: configs.onwarn
   };
