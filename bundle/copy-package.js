@@ -1,8 +1,4 @@
 const path = require('path');
-const fs = require('fs');
-
-const promisify = require('util').promisify;
-const copyFile = promisify(fs.copyFile);
 
 const { readFileAsync, writeFileAsync, mkdirp } = require('@ngx-devtools/common');
 const getPkgName = require('../utils/pkg-name');
@@ -18,14 +14,17 @@ const copyPackageFile = (src, dest) => {
     .then(content => {
       const pkg = JSON.parse(content);
       const pkgName = getPkgName(pkg);
-      if (!(pkg['typings'])) {
-        Object.assign(pkg, { typings: `./${pkgName}.d.ts` });
-        content = JSON.stringify(pkg, '\t', 2);
-      }
+
+      Object.assign(pkg, {
+        main: `./bundles/${pkgName}.umd.js`,
+        module: `./esm2015/${pkgName}.js`, 
+        typings: `./${pkgName}.d.ts` 
+      });
+
+      content = JSON.stringify(pkg, '\t', 2);
       const destPath = path.join(path.resolve(dest), pkgName, 'package.json');
       mkdirp(path.dirname(destPath));
-      return writeFileAsync(destPath, content)
-        .then(() => Promise.resolve(pkgName));
+      return writeFileAsync(destPath, content).then(() => Promise.resolve(pkgName));
     });
 }
 
