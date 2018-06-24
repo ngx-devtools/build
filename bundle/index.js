@@ -38,7 +38,7 @@ const bundle = (src, dest) => {
  * @param {*} dest 
  */
 const bundlePackage = (src, dest) => {
-  const srcFile = path.dirname(src).split(path.sep).join('/') + '/**/*.ts';
+  const srcFile = path.join(path.dirname(src), '**/*.ts').split(path.sep).join('/');
   const destPath = path.resolve(path.dirname(src).replace('src', dest).replace('libs', ''));
   return clean(destPath).then(() => bundle(srcFile, dest))
 };
