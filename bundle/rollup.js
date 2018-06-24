@@ -5,7 +5,10 @@ const { writeFileAsync, mkdirp } = require('@ngx-devtools/common');
 
 const { rollup } = require('rollup');
 const { rollupConfigs, configs } = require('./rollup.config');
-const { minifyUmd } = require('./minify-umd');
+const { uglify } = require('../rollup-plugins/uglify');
+
+const getMinFile = file => 
+  path.join(path.dirname(file), path.basename(file, '.js') + '.min.js');
 
 const bundleRollup = (options) => {
   return rollup(options.inputOptions)
@@ -17,19 +20,17 @@ const bundleRollup = (options) => {
         writeFileAsync(bundlePath, code + `\n//# sourceMappingURL=${path.basename(bundlePath)}.map`),
         writeFileAsync(bundlePath + '.map', map.toString())
       ]);  
-    })
+    }) 
 };
 
 const writeBundle = (options) => {
   const inputOptions = Object.assign({}, options.inputOptions, { 
-    external: [],
-    onwarn: configs.inputOptions.onwarn,
-    plugins: [ resolve({ jsnext: true, main: true, browser: true }) ]
+    external: [], plugins: options.inputOptions.plugins.concat(uglify())
   });
-  const outputOptions = Object.assign({}, options.outputOptions, { globals: {} });
-  return rollup(inputOptions)
-    .then(bundle => bundle.generate(outputOptions))
-    .then(({ code }) => minifyUmd(code, options.outputOptions.file));
+  const outputOptions = Object.assign({}, options.outputOptions, { 
+    globals: {}, file: getMinFile(options.outputOptions.file)
+  });
+  return bundleRollup({ inputOptions: inputOptions, outputOptions: outputOptions });
 };
 
 const bundleCode = (tmpSrc, dest) => {
@@ -37,13 +38,17 @@ const bundleCode = (tmpSrc, dest) => {
   return Promise.all(rollupConfig.overrides.map(override => {
     const config = rollupConfig.create(override.input, override.output);
     const inputOptions = Object.assign({}, config.inputOptions, { 
-      plugins: configs.inputOptions.plugins, 
+      plugins: [ resolve() ], 
       onwarn: configs.inputOptions.onwarn 
     });
-    const options = { inputOptions: inputOptions, outputOptions: config.outputOptions };
+    const options = { 
+      inputOptions: inputOptions, 
+      outputOptions: config.outputOptions
+    };
     return Promise.all([
       ((config.outputOptions.format === 'umd') 
-        ? writeBundle(options) : Promise.resolve()), 
+          ? writeBundle(options) 
+          : Promise.resolve()), 
       bundleRollup(options)
     ]);
   }))

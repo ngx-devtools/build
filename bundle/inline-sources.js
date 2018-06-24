@@ -1,6 +1,12 @@
 const path = require('path');
 
-const { mkdirp, getFiles, readFileAsync, writeFileAsync, inlineResourcesFromString } = require('@ngx-devtools/common');
+const { 
+  mkdirp, 
+  getFiles, 
+  readFileAsync, 
+  writeFileAsync, 
+  inlineResourcesFromString 
+} = require('@ngx-devtools/common');
 
 const argv = require('yargs')
   .option('libs', { default: 'libs', type: 'string' })
@@ -38,12 +44,10 @@ const getTempPath = (file, pkgName) => {
 * @param {destination of the output file} dest 
 */
 const inlineSources = (src, pkgName) => {
-  const files = getFiles(src);
-  return Promise.all(files.map(filePaths => {
-    return Promise.all(filePaths.map(file =>
-      copyFileAsync(file, getTempPath(file.replace(`${pkgName}${path.sep}src`, pkgName), pkgName))
-    ));
-  }));
+  const files = getFiles(src).join(',').split(',');
+  return Promise.all(files.map(file =>
+    copyFileAsync(file, getTempPath(file.replace(`${pkgName}${path.sep}src`, pkgName), pkgName))
+  ));
 };
 
 exports.inlineSources = inlineSources;

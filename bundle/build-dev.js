@@ -8,7 +8,6 @@ const { getSrcDirectories } = require('./directories');
 const { mkdirp, writeFileAsync, readFileAsync } = require('@ngx-devtools/common');
 
 const typescript = require('rollup-plugin-typescript2');
-const rxjsAutoPlugin = require('../rollup-plugins/rxjs');
 
 const getPkgName = require('../utils/pkg-name');
 
@@ -29,8 +28,8 @@ const rollupDev = (src, dest) => {
     ...configs.outputOptions,
     format: 'umd'
   };
-
-  const entry = path.join(src, 'src', 'index.ts');
+  const main = path.join(src, 'src', 'main.ts');
+  const entry = fs.existsSync(main) ? main : path.join(src, 'src', 'index.ts');
   return rollup({ ...inputOptions, ...{ input: entry } })
     .then(async bundle => {
       const tmpSrcDir = path.dirname(entry);
@@ -66,6 +65,19 @@ const buildDev = (src, dest) => {
     .then(tmpSrc => rollupDev(tmpSrc, dest));
 };
 
+const buildDevPackage = (srcPkg, dest) =>  {
+  return readFileAsync(srcPkg, 'utf8')
+    .then(content => Promise.resolve(getPkgName(JSON.parse(content))))
+    .then(pkgName => {
+      const destSrc = path.resolve(dest);
+      const folderTempBaseDir = path.join(destSrc.replace(path.basename(destSrc), '.tmp'), pkgName);
+      return inlineSources(
+          path.join(path.dirname(srcPkg), '/**/*.ts'), 
+          pkgName
+        ).then(() => Promise.resolve(folderTempBaseDir));
+    }).then(tmpSrc => rollupDev(tmpSrc, dest));
+};
+
 const buildDevAll = () => {
   return getSrcDirectories().then(directories => {
     const folders = directories.map(folder => 
@@ -75,5 +87,6 @@ const buildDevAll = () => {
   }).catch(error => console.error(error));
 };
 
+exports.buildDevPackage = buildDevPackage;
 exports.buildDev = buildDev;
 exports.buildDevAll = buildDevAll;
