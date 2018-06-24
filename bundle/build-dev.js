@@ -72,7 +72,7 @@ const buildDevPackage = (srcPkg, dest) =>  {
       const destSrc = path.resolve(dest);
       const folderTempBaseDir = path.join(destSrc.replace(path.basename(destSrc), '.tmp'), pkgName);
       return inlineSources(
-          path.join(path.dirname(srcPkg), '/**/*.ts'), 
+          path.join(path.dirname(srcPkg), '**/*.ts').split(path.sep).join('/'), 
           pkgName
         ).then(() => Promise.resolve(folderTempBaseDir));
     }).then(tmpSrc => rollupDev(tmpSrc, dest));
