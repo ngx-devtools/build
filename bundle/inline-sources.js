@@ -2,10 +2,6 @@ const path = require('path');
 
 const { mkdirp, getFiles, readFileAsync, writeFileAsync, inlineResourcesFromString } = require('@ngx-devtools/common');
 
-const argv = require('yargs')
-  .option('libs', { default: 'libs', type: 'string' })
-  .argv;
-
 /**
 * It will inline a template and style
 * @param {src file to be inline} file 
@@ -28,7 +24,8 @@ const getTempPath = (file, pkgName) => {
   return file.replace(process.env.APP_ROOT_PATH + path.sep, '') 
     .replace('src' + path.sep, '')
     .replace(pkgName, tempSource)
-    .replace(argv.libs + path.sep, '')
+    .replace('libs' + path.sep, '')
+    .replace('elements' + path.sep, '')
     .replace(`app`, tempSource);
 };
 
