@@ -5,11 +5,16 @@ const { rollup } = require('rollup');
 const { configs } = require('./rollup.config');
 const { inlineSources } = require('./inline-sources');
 const { getSrcDirectories } = require('./directories');
-const { mkdirp, writeFileAsync, readFileAsync } = require('@ngx-devtools/common');
+const { mkdirp, writeFileAsync, memoize } = require('@ngx-devtools/common');
+const { readPackageFile } = require('./read-package-file');
 
 const typescript = require('rollup-plugin-typescript2');
 
-const getPkgName = require('../utils/pkg-name');
+const getFolderTempBaseDir = (dest, pkgName) => {
+  const destSrc = path.resolve(dest);
+  return path.join(destSrc.replace(path.basename(destSrc), '.tmp'), pkgName);
+};
+
 
 const rollupDev = (src, dest) => {
   const inputOptions = { 
@@ -42,16 +47,6 @@ const rollupDev = (src, dest) => {
         writeFileAsync(file + '.map', map.toString())
       ])
     });
-}
-
-const readPackageFile = src => {
-  const source = src.split(path.sep).join('/').replace('/**/*.ts', '');
-  const filePath = path.join(source, 'package.json');
-  return readFileAsync(filePath, 'utf8')
-    .then(content => {
-      const pkg = JSON.parse(content);
-      return Promise.resolve(getPkgName(pkg));
-    });
 };
 
 const buildDev = (src, dest) => {
@@ -66,16 +61,12 @@ const buildDev = (src, dest) => {
 };
 
 const buildDevPackage = (srcPkg, dest) =>  {
-  return readFileAsync(srcPkg, 'utf8')
-    .then(content => Promise.resolve(getPkgName(JSON.parse(content))))
-    .then(pkgName => {
-      const destSrc = path.resolve(dest);
-      const folderTempBaseDir = path.join(destSrc.replace(path.basename(destSrc), '.tmp'), pkgName);
-      return inlineSources(
-          path.join(path.dirname(srcPkg), '**/*.ts').split(path.sep).join('/'), 
-          pkgName
-        ).then(() => Promise.resolve(folderTempBaseDir));
-    }).then(tmpSrc => rollupDev(tmpSrc, dest));
+  return readPackageFile(srcPkg)
+    .then(async pkgName => {
+      await inlineSources(path.join(path.dirname(srcPkg), '**/*.ts').split(path.sep).join('/'), pkgName);
+      return Promise.resolve()
+    })
+    .then(tmpSrc => rollupDev(tmpSrc, dest));
 };
 
 const buildDevAll = () => {
