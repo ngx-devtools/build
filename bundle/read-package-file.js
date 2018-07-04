@@ -3,6 +3,10 @@ const { readFileAsync, memoize  } = require('@ngx-devtools/common');
 
 const getPkgName = memoize(require('../utils/pkg-name'));
 
+/**
+ * read package.json file
+ * @param {source file of package.json} src 
+ */
 const readPackageFile = src => {
   const source = src.split(sep).join('/').replace('/**/*.ts', '');
   const filePath = (basename(source).includes('package.json')) ? source : join(source, 'package.json');

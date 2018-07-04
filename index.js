@@ -13,7 +13,7 @@ const prodModeParams = [ '--prod',  '--prod=true',  '--prod true'  ];
 const { isProcess } = require('@ngx-devtools/common');
 
 const { attachedToIndexHtml  } = require('./utils/systemjs-script-min');
-const { bundle, bundlePackage, bundleFiles, buildDev, buildDevAll, buildDevPackage  } = require('./bundle');
+const { bundle, bundlePackage, bundleFiles, buildDev, buildDevAll, getSrcDirectories  } = require('./bundle');
 const { onClientFileChanged } = require('./utils/on-changed');
 
 const vendorBundle = require('./utils/vendor-bundle');
@@ -26,7 +26,7 @@ const bundlProd = () =>
 const build = (isProcess(prodModeParams)) 
   ? bundlProd 
   : (argv.pkg 
-      ? () => buildDevPackage(argv.pkg, 'dist')
+      ? () => buildDev(argv.pkg, 'dist')
       : buildDevAll);
 
 exports.bundle = bundle;
@@ -35,3 +35,4 @@ exports.buildDev = buildDev;
 exports.onClientFileChanged = onClientFileChanged;
 exports.vendorBundle = vendorBundle;
 exports.attachedToIndexHtml = attachedToIndexHtml;
+exports.getSrcDirectories = getSrcDirectories;

@@ -55,7 +55,6 @@ const bundleFiles = () => {
   }).catch(error => console.error(error));
 };
 
-exports.buildDevPackage = buildDevPackage;
 exports.buildDev = buildDev;
 exports.buildDevAll = buildDevAll;
 exports.bundleFiles = bundleFiles;
