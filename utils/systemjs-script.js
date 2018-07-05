@@ -5,7 +5,7 @@
           case "string":
             return promise.then(() => System.import(file));
           case "object":
-            if(Array.isArray(file.constructor)){
+            if(Array.isArray(file)){
               return promise.then(() => Promise.all(file.map(fileMap => System.import(fileMap))));
             }
         }
