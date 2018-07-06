@@ -24,8 +24,8 @@ const copyEntryFiles = (dest) => {
   }));
 };
 
-const copyEntry = (src) => {
-  const tempSrc = path.dirname(src.replace('src', '.tmp'));
+const copyEntry = (pkgName) => {
+  const tempSrc = path.join('.tmp', pkgName);
   return copyEntryFiles(tempSrc).then(() => updateEntryFile(tempSrc));
 };
 

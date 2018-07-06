@@ -10,9 +10,10 @@ const rollup = require('./rollup');
 
 const bundle = (src, dest) => {
   return copyPackageFile(src, dest)
-    .then(pkgName => Promise.all([ copyEntry(src), inlineSources(src, pkgName) ]))
+    .then(pkgName => Promise.all([ copyEntry(pkgName), inlineSources(src, pkgName) ]))
     .then(results => results.find(result => result))
-    
+    .then(tmpSrc => compile(tmpSrc))
+    .then(tmpSrc => Promise.all([ copyAssetFiles(tmpSrc, dest), rollup(tmpSrc, dest) ]));
 };
 
 exports.bundleProd = bundle;
