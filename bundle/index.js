@@ -9,8 +9,10 @@ const { compile } = require('./ngc');
 const { copyAssetFiles } = require('./copy-assets');
 const { getSrcDirectories } = require('./directories');
 const { rollupConfigs } = require('./rollup.config');
+const { readPackageFile } = require('./read-package-file');
+const { rollupDev } = require('./rollup-dev');
 
-const { buildDev, buildDevAll, buildDevPackage } = require('./build-dev');
+const { buildDev, buildDevAll, buildApp, buildElements, buildLibs } = require('./build-dev');
 
 const rollup = require('./rollup');
 
@@ -56,14 +58,19 @@ const bundleFiles = () => {
 };
 
 exports.buildDev = buildDev;
+exports.buildElements = buildElements;
+exports.buildApp = buildApp;
+exports.buildLibs = buildLibs;
 exports.buildDevAll = buildDevAll;
+exports.copyAssetFiles = copyAssetFiles;
+exports.copyEntryFiles = copyEntryFiles;
+exports.copyPackageFile = copyPackageFile;
+exports.getSrcDirectories = getSrcDirectories;
+exports.inlineSources = inlineSources;
+exports.compile = compile;
+exports.readPackageFile = readPackageFile;
+exports.rollupDev = rollupDev;
+exports.rollupConfigs = rollupConfigs;
 exports.bundleFiles = bundleFiles;
 exports.bundle = bundle;
 exports.bundlePackage = bundlePackage;
-exports.copyPackageFile = copyPackageFile;
-exports.copyEntryFiles = copyEntryFiles;
-exports.inlineSources = inlineSources;
-exports.compile = compile;
-exports.copyAssetFiles = copyAssetFiles;
-exports.getSrcDirectories = getSrcDirectories;
-exports.rollupConfigs = rollupConfigs;

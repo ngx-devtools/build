@@ -13,8 +13,9 @@ const prodModeParams = [ '--prod',  '--prod=true',  '--prod true'  ];
 const { isProcess } = require('@ngx-devtools/common');
 
 const { attachedToIndexHtml  } = require('./utils/systemjs-script-min');
-const { bundle, bundlePackage, bundleFiles, buildDev, buildDevAll, getSrcDirectories  } = require('./bundle');
 const { onClientFileChanged } = require('./utils/on-changed');
+
+const { bundle, bundlePackage, bundleFiles, buildDev, buildDevAll, getSrcDirectories } = require('./bundle');
 
 const vendorBundle = require('./utils/vendor-bundle');
 
@@ -34,5 +35,3 @@ exports.build = build;
 exports.buildDev = buildDev;
 exports.onClientFileChanged = onClientFileChanged;
 exports.vendorBundle = vendorBundle;
-exports.attachedToIndexHtml = attachedToIndexHtml;
-exports.getSrcDirectories = getSrcDirectories;

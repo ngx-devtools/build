@@ -1,12 +1,12 @@
 const { join, basename, dirname } = require('path');
-const { existsSync } = require('fs');
 
 const { mkdirp, writeFileAsync } = require('@ngx-devtools/common');
 const { rollup } = require('rollup');
-const { configs } = require('./rollup.config');
 
 const typescript = require('rollup-plugin-typescript2');
 const multiEntry = require('rollup-plugin-multi-entry');
+
+const { configs } = require('./rollup.config');
 
 /**
  * bundle the component using rollup
@@ -14,11 +14,12 @@ const multiEntry = require('rollup-plugin-multi-entry');
  * @param {destination path of the output file} dest 
  */
 const rollupDev = (src, dest, options = {}) => {
-  const main = join(src, 'src', 'main.ts');
-  const entry = existsSync(main) ? main : join(src, 'src', 'index.ts');
+  const entry = Array.isArray(src) ? src : join(src, 'src', 'index.ts')
   
-  const pkgName = basename(src);
-  const file = join(src.replace('.tmp', dest), 'bundles', `${pkgName}.umd.js`);
+  const pkgName = (options.output) ? options.output.name: basename(src);
+  const file = (options.output) 
+    ? options.output.file
+    : join(src.replace('.tmp', dest), 'bundles', `${pkgName}.umd.js`);
 
   const inputOptions = { 
     input: entry,
