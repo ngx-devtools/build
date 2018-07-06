@@ -24,5 +24,11 @@ const copyEntryFiles = (dest) => {
   }));
 };
 
+const copyEntry = (src) => {
+  const tempSrc = path.dirname(src.replace('src', '.tmp'));
+  return copyEntryFiles(tempSrc).then(() => updateEntryFile(tempSrc));
+};
+
+exports.copyEntry = copyEntry;
 exports.updateEntryFile = updateEntryFile;
 exports.copyEntryFiles = copyEntryFiles;
