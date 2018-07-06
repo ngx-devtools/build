@@ -1,9 +1,11 @@
-const { sep } = require('path');
+const { join } = require('path');
 
 const { getSrcDirectories } = require('./directories');
 const { readPackageFile } = require('./read-package-file');
 const { inlineSources } = require('./inline-sources');
 const { rollupDev } = require('./rollup-dev');
+
+const { buildElements } = require('./build-elements');
 
 /**
  * Build the source with package.jon | source of .ts files and dest parameters
@@ -22,6 +24,21 @@ const buildDev = (src, dest) => {
     .then(tmpSrc => rollupDev(tmpSrc, dest));
 };
 
+const buildLibs = () => {
+  const SRC_LIBS_PATH = join('src', 'libs');
+  return getSrcDirectories(SRC_LIBS_PATH).then(packages => {
+    return Promise.all(packages.map(package => buildDev(package.src, package.dest)));
+  });
+};
+
+const buildApp = () => {
+  const options = {
+    src: join('src', 'app', 'package.json'),
+    dest: 'dist'
+  };
+  return buildDev(options.src, options.dest);
+};
+
 /**
  * Build all the sources in folder (app, libs, elements)
  * Steps:
@@ -30,13 +47,10 @@ const buildDev = (src, dest) => {
  * 3. on each directory execute the buildDev
  */
 const buildDevAll = () => {
-  return getSrcDirectories().then(directories => {
-    const folders = directories.map(folder => 
-      Object.assign(folder, { src: folder.src.split(sep).join('/') + '/**/*.ts' })
-    );
-    return Promise.all(folders.map(folder => buildDev(folder.src, folder.dest)));
-  }).catch(error => console.error(error));
+  return Promise.all([ buildElements(), buildApp(), buildLibs()  ])
 };
 
+exports.buildApp = buildApp;
+exports.buildLibs = buildLibs;
 exports.buildDev = buildDev;
 exports.buildDevAll = buildDevAll;

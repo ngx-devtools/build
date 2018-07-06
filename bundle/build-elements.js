@@ -1,34 +1,21 @@
 const { join, basename, dirname } = require('path');
-const { existsSync } = require('fs');
 
-const { mkdirp, writeFileAsync, readdirAsync } = require('@ngx-devtools/common');
+const { mkdirp, writeFileAsync } = require('@ngx-devtools/common');
 const { rollup } = require('rollup');
 const { configs } = require('./rollup.config');
 const { readPackageFile } = require('./read-package-file');
 const { inlineSources } = require('./inline-sources');
+const { getSrcDirectories } = require('./directories');
+const { rollupDev } = require('./rollup-dev');
 
 const typescript = require('rollup-plugin-typescript2');
 const multiEntry = require('rollup-plugin-multi-entry');
 
-const getElements = (src) => {   
-  const getSource = (directory) => {
-    return (util.isString(directory)) 
-      ? { src: directory.replace('/**/*.ts', ''), dest: 'dist' }
-      : { src: directory.src.replace('/**/*.ts', ''), dest: directory.dest }
-  };
-  const readdir = (srcDir) => {
-    return readdirAsync(srcDir)
-      .then(files => {
-        const filePath = (file) => path.join(path.resolve(), srcDir, file);
-        const directories = files.filter(file => fs.statSync(filePath(file)).isDirectory());
-        return directories.map(directory => getSource(path.join(srcDir, directory, 'package.json')));
-      });
-  };
-  return readdir(src);
-};
+const SRC_ELEMENTS_PATH = join('src', 'elements');
+
 
 const rollupElements = (src, dest) => {
-  const file = join(src.replace('.tmp', dest), 'bundles', 'elements.umd.js');
+  const file = join(dest, 'elements', 'bundles', 'elements.umd.js');
 
   const inputOptions = { 
     input: src,
@@ -63,15 +50,22 @@ const rollupElements = (src, dest) => {
 };
 
 const buildElements = () => {
-  return getElements('src/elements').then(packages => {
+  return getSrcDirectories(SRC_ELEMENTS_PATH).then(packages => {
       return Promise.all(packages.map(package => {
         return readPackageFile(package.src)
           .then(pkgName => inlineSources(package.src, pkgName))
-          .then(tmpSrc => path.join(tmpSrc, 'src', 'index.ts'))
+          .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
       }))
-    }).then(inputs => rollupElements(inputs, 'dist');
+    }).then(inputs => {
+      const options = {
+        input: { input: inputs },
+        output: {
+          name: 'elements',
+          file: join(dest, 'elements', 'bundles', 'elements.umd.js')
+        }
+      }
+      return rollupDev()
+    });
 };
 
-exports.rollupElements = rollupElements;
-exports.getElements = getElements;
 exports.buildElements = buildElements;
