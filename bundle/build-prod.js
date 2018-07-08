@@ -1,7 +1,5 @@
 const { join } = require('path');
 
-const { isProcess } = require('@ngx-devtools/common');
-
 const { copyPackageFile } = require('./copy-package');
 const { inlineSources } = require('./inline-sources');
 const { copyEntry } = require('./copy-entry');
