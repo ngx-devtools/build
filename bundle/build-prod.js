@@ -40,7 +40,7 @@ const buildProdAll = () => Promise.all([ buildProdElements(), buildProdApp(), bu
 exports.buildProdAll = buildProdAll;
 exports.buildProdElements = buildProdElements;
 exports.buildProdElement = buildProdElement;
-exports.buildProdElementsArg = buildProdElementsArgv;
+exports.buildProdElementsArgv = buildProdElementsArgv;
 exports.buildProd = bundle;
 exports.buildProdApp = buildProdApp;
 exports.buildProdLibs = buildProdLibs;

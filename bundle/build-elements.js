@@ -126,4 +126,4 @@ const buildProdElements = () => {
 
 exports.buildProdElements = buildProdElements;
 exports.buildProdElement = buildProdElement;
-exports.buildProdElementsArg = buildProdElementsArgv;
+exports.buildProdElementsArgv = buildProdElementsArgv;

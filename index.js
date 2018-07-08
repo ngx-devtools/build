@@ -5,7 +5,9 @@ if (!(process.env.APP_ROOT_PATH)) {
 }
 
 const argv = require('yargs')
-  .option('pkg', { default: null, type: 'string' });
+  .option('pkg', { default: null, type: 'string' })
+  .option('elements', { default: null, type: 'string' })
+  .argv;
 
 const prodModeParams = [ '--prod',  '--prod=true',  '--prod true'  ];
 
