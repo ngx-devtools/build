@@ -47,22 +47,33 @@ const copyPackageSrc = (tmpSrc) => {
 };
 
 const createConfigs = (src, dest, options = {}) => {
-  const esFolders = [ 'esm2015', 'esm5' ];
+  const esFolders = [ 'esm2015', 'esm5', 'umd' ];
   const folder = path.basename(src);
   return esFolders.map(esFolder => {
     const plugins = (options.input && options.input.plugins) ? options.input.plugins: [];
+
+    const inputFile = (esFolder.includes('umd')) 
+      ? path.join(src, 'esm5', `${folder}.js`)
+      : path.join(src, esFolder, `${folder}.js`)
+
+    const file = (!(esFolder.includes('umd'))) 
+      ? inputFile.replace('.tmp', dest)
+      : path.join(dest, folder, 'bundles', `${folder}.umd.js`);
+
+    const format = (esFolder.includes('umd') ? 'umd' : 'es');
+
     return {
       inputOptions: {
         ...configs.inputOptions,
-        input: path.join(src, esFolder, `${folder}.js`),
+        input: inputFile,
         plugins: [ multiEntry(), resolve() ],
         onwarn: configs.inputOptions.onwarn
       },
       outputOptions: {
         ...configs.outputOptions,
         name: folder, 
-        file: path.join(dest, folder, esFolder, `${folder}.js`), 
-        format: 'es'
+        file: file, 
+        format: format
       }
     }
   });
