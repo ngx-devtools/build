@@ -6,7 +6,7 @@ const { copyEntry } = require('./copy-entry');
 const { compile } = require('./ngc');
 const { copyAssetFiles } = require('./copy-assets');
 const { getSrcDirectories } = require('./directories');
-const { buildProdElements, buildProdElement } = require('./build-elements');
+const { buildProdElements, buildProdElement, buildProdElementsArgv } = require('./build-elements');
 
 const rollup = require('./rollup');
 
@@ -40,6 +40,7 @@ const buildProdAll = () => Promise.all([ buildProdElements(), buildProdApp(), bu
 exports.buildProdAll = buildProdAll;
 exports.buildProdElements = buildProdElements;
 exports.buildProdElement = buildProdElement;
+exports.buildProdElementsArg = buildProdElementsArgv;
 exports.buildProd = bundle;
 exports.buildProdApp = buildProdApp;
 exports.buildProdLibs = buildProdLibs;

@@ -13,7 +13,7 @@ const { readPackageFile } = require('./read-package-file');
 const { rollupDev } = require('./rollup-dev');
 
 const { buildDev, buildDevAll, buildApp, buildElements, buildLibs } = require('./build-dev');
-const { buildProd, buildProdAll, buildProdApp, buildProdLibs, buildProdElements, buildProdElement } = require('./build-prod');
+const { buildProd, buildProdAll, buildProdApp, buildProdLibs, buildProdElements, buildProdElement, buildProdElementsArgv } = require('./build-prod');
 
 const buildProdPackage = (src, dest) => {
   const destPath = path.dirname(src.replace('src', 'dest'));
@@ -30,6 +30,7 @@ exports.buildProdApp = buildProdApp;
 exports.buildProdLibs = buildProdLibs;
 exports.buildProdElements = buildProdElements;
 exports.buildProdElement = buildProdElement;
+exports.buildProdElementsArg = buildProdElementsArgv;
 exports.buildProd = buildProd;
 exports.buildProdPackage = buildProdPackage;
 exports.copyAssetFiles = copyAssetFiles;

@@ -19,6 +19,10 @@ const DEST_PATH = 'dist';
 const SRC_ELEMENTS_PATH = path.join('src', PKG_NAME);
 const TMP_PACKAGE = path.join('.tmp', PKG_NAME);
 
+const argv = require('yargs')
+  .option('elements', { default: null, type: 'string' })
+  .argv;
+
 const createElements = (packages) => {
   return Promise.all(packages.map(package => {
     return readPackageFile(package.src, 'utf8')
@@ -95,9 +99,31 @@ const buildProdElement = (packages) => {
   .then(tmpSrc => Promise.all([ copyAssetFiles(tmpSrc, DEST_PATH), buildRollup(tmpSrc, DEST_PATH)  ]))
 };
 
+const buildProdElementsArgv = () => {
+  return (!(argv.elements === null)) 
+    ? (async () => {
+        const argvs = argv.elements.split('.');
+        const elements = await getSrcDirectories(SRC_ELEMENTS_PATH).then(packages => {
+          const elements = packages.map(package => 
+            path.dirname(package.src.replace(SRC_ELEMENTS_PATH + path.sep, '')))
+              .filter(element => argvs.includes(element));
+          return (!(elements)) ? []
+            : elements.map(element => {
+                return {
+                  src: path.join(SRC_ELEMENTS_PATH, element, 'package.json'), 
+                  dest: DEST_PATH
+                }
+              });
+        });
+        return (argv.elements) ? buildProdElement(elements): buildProdElements();
+      })()
+    : Promise.resolve();
+};
+
 const buildProdElements = () => {
   return getSrcDirectories(SRC_ELEMENTS_PATH).then(packages => buildProdElement(packages));
 };
 
 exports.buildProdElements = buildProdElements;
 exports.buildProdElement = buildProdElement;
+exports.buildProdElementsArg = buildProdElementsArgv;
