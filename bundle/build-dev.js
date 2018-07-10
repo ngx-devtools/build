@@ -6,7 +6,7 @@ const { inlineSources } = require('./inline-sources');
 const { rollupDev } = require('./rollup-dev');
 
 const SRC_ELEMENTS_PATH = join('src', 'elements');
-const DEST_PATH = 'dist'
+const DEST_PATH = 'dist';
 
 /**
  * Build the source with package.jon | source of .ts files and dest parameters
@@ -72,7 +72,8 @@ const buildElements = () => {
           .then(pkgName => inlineSources(package.src, pkgName))
           .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
       }))
-    }).then(inputs => {
+    })
+    .then(inputs => {
       const options = {
         output: { name: 'elements', file: join(DEST_PATH, 'elements', 'bundles', 'elements.umd.js') }
       };
