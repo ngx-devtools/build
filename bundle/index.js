@@ -3,68 +3,43 @@ const path = require('path');
 const { clean } = require('@ngx-devtools/common');
 
 const { copyPackageFile } = require('./copy-package');
-const { copyEntryFiles, updateEntryFile } = require('./copy-entry');
+const { copyEntryFiles, copyEntry } = require('./copy-entry');
 const { inlineSources } = require('./inline-sources');
 const { compile } = require('./ngc');
 const { copyAssetFiles } = require('./copy-assets');
 const { getSrcDirectories } = require('./directories');
 const { rollupConfigs } = require('./rollup.config');
+const { readPackageFile } = require('./read-package-file');
+const { rollupDev } = require('./rollup-dev');
 
-const { buildDev, buildDevAll, buildDevPackage } = require('./build-dev');
+const { buildDev, buildDevAll, buildApp, buildElements, buildLibs } = require('./build-dev');
+const { buildProd, buildProdAll, buildProdApp, buildProdLibs, buildProdElements, buildProdElement, buildProdElementsArgv } = require('./build-prod');
 
-const rollup = require('./rollup');
-
-/**
- * Bundle Source files to Angular Standard Libary
- * @param {source file} src 
- * @param {*} dest 
- */
-const bundle = (src, dest) => {
-  return copyPackageFile(src, dest)
-    .then(pkgName => {
-      const destSrc = path.resolve(dest);
-      const folderTempBaseDir = path.join(destSrc.replace(path.basename(destSrc), '.tmp'), pkgName);
-      return Promise.all([ copyEntryFiles(folderTempBaseDir), inlineSources(src, pkgName) ])
-        .then(() => Promise.resolve(folderTempBaseDir)); 
-    })
-    .then(tmpSrc => updateEntryFile(tmpSrc))
-    .then(tmpSrc => compile(tmpSrc))
-    .then(tmpSrc => Promise.all([ copyAssetFiles(tmpSrc, dest), rollup(tmpSrc, dest) ]));
+const buildProdPackage = (src, dest) => {
+  const destPath = path.dirname(src.replace('src', 'dest'));
+  return clean(destPath).then(() => buildProd(src, dest))
 };
 
-/**
- * 
- * @param {*} src 
- * @param {*} dest 
- */
-const bundlePackage = (src, dest) => {
-  const srcFile = path.join(path.dirname(src), '**/*.ts').split(path.sep).join('/');
-  const destPath = path.resolve(path.dirname(src).replace('src', dest).replace('libs', ''));
-  return clean(destPath).then(() => bundle(srcFile, dest))
-};
-
-/**
- * bundle all files/folders
- */
-const bundleFiles = () => {
-  return getSrcDirectories().then(directories => {
-    const folders = directories.map(folder => 
-      Object.assign(folder, { src: folder.src.split(path.sep).join('/') + '/**/*.ts' })
-    );
-    return Promise.all(folders.map(folder => bundle(folder.src, folder.dest)));
-  }).catch(error => console.error(error));
-};
-
-exports.buildDevPackage = buildDevPackage;
 exports.buildDev = buildDev;
+exports.buildElements = buildElements;
+exports.buildApp = buildApp;
+exports.buildLibs = buildLibs;
 exports.buildDevAll = buildDevAll;
-exports.bundleFiles = bundleFiles;
-exports.bundle = bundle;
-exports.bundlePackage = bundlePackage;
-exports.copyPackageFile = copyPackageFile;
+exports.buildProdAll = buildProdAll;
+exports.buildProdApp = buildProdApp;
+exports.buildProdLibs = buildProdLibs;
+exports.buildProdElements = buildProdElements;
+exports.buildProdElement = buildProdElement;
+exports.buildProdElementsArgv = buildProdElementsArgv;
+exports.buildProd = buildProd;
+exports.buildProdPackage = buildProdPackage;
+exports.copyAssetFiles = copyAssetFiles;
 exports.copyEntryFiles = copyEntryFiles;
+exports.copyEntry = copyEntry;
+exports.copyPackageFile = copyPackageFile;
+exports.getSrcDirectories = getSrcDirectories;
 exports.inlineSources = inlineSources;
 exports.compile = compile;
-exports.copyAssetFiles = copyAssetFiles;
-exports.getSrcDirectories = getSrcDirectories;
+exports.readPackageFile = readPackageFile;
+exports.rollupDev = rollupDev;
 exports.rollupConfigs = rollupConfigs;

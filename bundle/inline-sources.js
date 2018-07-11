@@ -1,16 +1,6 @@
 const path = require('path');
 
-const { 
-  mkdirp, 
-  getFiles, 
-  readFileAsync, 
-  writeFileAsync, 
-  inlineResourcesFromString 
-} = require('@ngx-devtools/common');
-
-const argv = require('yargs')
-  .option('libs', { default: 'libs', type: 'string' })
-  .argv;
+const { mkdirp, getFiles, readFileAsync, writeFileAsync, inlineResourcesFromString } = require('@ngx-devtools/common');
 
 /**
 * It will inline a template and style
@@ -31,12 +21,23 @@ const copyFileAsync = (file, dest) => {
  */
 const getTempPath = (file, pkgName) => {
   const tempSource = `.tmp\/${pkgName}\/src`;
-  return file.replace(path.resolve() + path.sep, '') 
+  return file.replace(process.env.APP_ROOT_PATH + path.sep, '') 
     .replace('src' + path.sep, '')
     .replace(pkgName, tempSource)
-    .replace(argv.libs + path.sep, '')
+    .replace('libs' + path.sep, '')
+    .replace('elements' + path.sep, '')
     .replace(`app`, tempSource);
-}
+};
+
+/**
+ * get the source file, check if source file has package.json
+ * @param {base path director of the source} src 
+ */
+const getSourceFile = (src) => {
+  return src.includes('package.json') 
+    ? path.join(path.dirname(src), '**/*.ts').split(path.sep).join('/')
+    : src; 
+};
 
 /**
 * Copy all inline files
@@ -44,10 +45,10 @@ const getTempPath = (file, pkgName) => {
 * @param {destination of the output file} dest 
 */
 const inlineSources = (src, pkgName) => {
-  const files = getFiles(src).join(',').split(',');
+  const files = getFiles(getSourceFile(src)).join(',').split(',');
   return Promise.all(files.map(file =>
     copyFileAsync(file, getTempPath(file.replace(`${pkgName}${path.sep}src`, pkgName), pkgName))
-  ));
+  )).then(() => path.join('.tmp', pkgName));
 };
 
 exports.inlineSources = inlineSources;

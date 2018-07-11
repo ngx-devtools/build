@@ -1,4 +1,4 @@
-const path = require('path');
+const { join, basename, resolve, sep, dirname } = require('path');
 
 const { readFileAsync, writeFileAsync, mkdirp } = require('@ngx-devtools/common');
 const getPkgName = require('../utils/pkg-name');
@@ -9,7 +9,8 @@ const getPkgName = require('../utils/pkg-name');
  * @param {destination where to write file} dest 
  */
 const copyPackageFile = (src, dest) => {
-  const filePath = path.join(path.resolve(src.replace('/**/*.ts', '')), 'package.json');
+  const source = src.split(sep).join('/').replace('/**/*.ts', '');
+  const filePath = (basename(source).includes('package.json')) ? source : join(source, 'package.json');
   return readFileAsync(filePath)
     .then(content => {
       const pkg = JSON.parse(content);
@@ -22,8 +23,8 @@ const copyPackageFile = (src, dest) => {
       });
 
       content = JSON.stringify(pkg, '\t', 2);
-      const destPath = path.join(path.resolve(dest), pkgName, 'package.json');
-      mkdirp(path.dirname(destPath));
+      const destPath = join(resolve(dest), pkgName, 'package.json');
+      mkdirp(dirname(destPath));
       return writeFileAsync(destPath, content).then(() => Promise.resolve(pkgName));
     });
 }
