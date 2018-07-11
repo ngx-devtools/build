@@ -1,92 +1,97 @@
-const path = require('path');
-const fs = require('fs');
+const { join } = require('path');
 
-const { rollup } = require('rollup');
-const { configs } = require('./rollup.config');
-const { inlineSources } = require('./inline-sources');
 const { getSrcDirectories } = require('./directories');
-const { mkdirp, writeFileAsync, readFileAsync } = require('@ngx-devtools/common');
+const { readPackageFile } = require('./read-package-file');
+const { inlineSources } = require('./inline-sources');
+const { rollupDev } = require('./rollup-dev');
 
-const typescript = require('rollup-plugin-typescript2');
+const SRC_ELEMENTS_PATH = join('src', 'elements');
+const DEST_PATH = 'dist';
 
-const getPkgName = require('../utils/pkg-name');
-
-const rollupDev = (src, dest) => {
-  const inputOptions = { 
-    ...configs.inputOptions,
-    plugins: [
-      typescript({ 
-        useTsconfigDeclarationDir: true,
-        check: false,
-        cacheRoot: path.resolve('node_modules/.tmp/.rts2_cache')
-      })
-    ],
-    onwarn: configs.onwarn
-  };
-  
-  const outputOptions = {
-    ...configs.outputOptions,
-    format: 'umd'
-  };
-  const main = path.join(src, 'src', 'main.ts');
-  const entry = fs.existsSync(main) ? main : path.join(src, 'src', 'index.ts');
-  return rollup({ ...inputOptions, ...{ input: entry } })
-    .then(async bundle => {
-      const tmpSrcDir = path.dirname(entry);
-      const pkgName = path.basename(tmpSrcDir.replace('src', ''))
-      const file = path.join(tmpSrcDir.replace('.tmp', dest).replace('src', 'bundles'), `${pkgName}.umd.js`);
-      const { code, map } = await bundle.generate({ ...outputOptions, ...{ name: pkgName, file: file } });
-      mkdirp(path.dirname(file));
-      return Promise.all([ 
-        writeFileAsync(file, code + `\n//# sourceMappingURL=${path.basename(file)}.map`),
-        writeFileAsync(file + '.map', map.toString())
-      ])
-    });
-}
-
-const readPackageFile = src => {
-  const source = src.split(path.sep).join('/').replace('/**/*.ts', '');
-  const filePath = path.join(source, 'package.json');
-  return readFileAsync(filePath, 'utf8')
-    .then(content => {
-      const pkg = JSON.parse(content);
-      return Promise.resolve(getPkgName(pkg));
-    });
-};
-
+/**
+ * Build the source with package.jon | source of .ts files and dest parameters
+ * i.e npm run build -- --pkg src/app/package.json
+ *     buildDev("src\/app\/**\/*.ts", "dist")
+ * Steps: 
+ * 1. read the package.json, extract the name of the package
+ * 2. inline the html, scss, and css to the component destination to .tmp folder
+ * 3. build the source using rollup with umd file format
+ * @param {package.json source path or source of all .ts files} srcPkg 
+ * @param {destination of the build files} dest 
+ */
 const buildDev = (src, dest) => {
   return readPackageFile(src)
-    .then(pkgName => {
-      const destSrc = path.resolve(dest);
-      const folderTempBaseDir = path.join(destSrc.replace(path.basename(destSrc), '.tmp'), pkgName);
-      return inlineSources(src, pkgName)
-        .then(() => Promise.resolve(folderTempBaseDir));
-    })
+    .then(pkgName => inlineSources(src, pkgName))
     .then(tmpSrc => rollupDev(tmpSrc, dest));
 };
 
-const buildDevPackage = (srcPkg, dest) =>  {
-  return readFileAsync(srcPkg, 'utf8')
-    .then(content => Promise.resolve(getPkgName(JSON.parse(content))))
-    .then(pkgName => {
-      const destSrc = path.resolve(dest);
-      const folderTempBaseDir = path.join(destSrc.replace(path.basename(destSrc), '.tmp'), pkgName);
-      return inlineSources(
-          path.join(path.dirname(srcPkg), '**/*.ts').split(path.sep).join('/'), 
-          pkgName
-        ).then(() => Promise.resolve(folderTempBaseDir));
-    }).then(tmpSrc => rollupDev(tmpSrc, dest));
+/**
+ * Build the source from `libs` folder 
+ * Steps: 
+ * 1. get all the base directories in the libs folder
+ * 2. read the package.json file
+ * 3. inline the html, scss, and css to the component
+ * 4. build the source using rollup with the umd file format
+ */
+const buildLibs = () => {
+  const SRC_LIBS_PATH = join('src', 'libs');
+  return getSrcDirectories(SRC_LIBS_PATH).then(packages => {
+    return Promise.all(packages.map(package => buildDev(package.src, package.dest)));
+  });
 };
 
+/**
+ * Build the source from `app` folder
+ * Steps:
+ * 1. get all the base directories in the app folder
+ * 2. read the package.json file
+ * 3. inline the html, scss, and css to the component
+ * 4. build the source using rollup with the umd file format
+ */
+const buildApp = () => {
+  const options = {
+    src: join('src', 'app', 'package.json'),
+    dest: DEST_PATH
+  };
+  return buildDev(options.src, options.dest);
+};
+
+/**
+ * Build the source from `elements` folder
+ * Steps:
+ * 1. get all the base directories in the elements folder
+ * 2. read the package.json file
+ * 3. inline the html, scss, and css to the component
+ * 4. return array of inputs to build in 1 file
+ * 5. build the source using rollup with the umd file format
+ */
+const buildElements = () => {
+  return getSrcDirectories(SRC_ELEMENTS_PATH).then(packages => {
+      return Promise.all(packages.map(package => {
+        return readPackageFile(package.src)
+          .then(pkgName => inlineSources(package.src, pkgName))
+          .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
+      }))
+    })
+    .then(inputs => {
+      const options = {
+        output: { name: 'elements', file: join(DEST_PATH, 'elements', 'bundles', 'elements.umd.js') }
+      };
+      return rollupDev(inputs, DEST_PATH, options);
+    });
+};
+
+/**
+ * Build all the sources in folder (app, libs, elements)
+ * Steps:
+ * 1. execute buildElements, buildApp and buildLibs
+ */
 const buildDevAll = () => {
-  return getSrcDirectories().then(directories => {
-    const folders = directories.map(folder => 
-      Object.assign(folder, { src: folder.src.split(path.sep).join('/') + '/**/*.ts' })
-    );
-    return Promise.all(folders.map(folder => buildDev(folder.src, folder.dest)));
-  }).catch(error => console.error(error));
+  return Promise.all([ buildElements(), buildApp(), buildLibs()  ])
 };
 
-exports.buildDevPackage = buildDevPackage;
+exports.buildApp = buildApp;
+exports.buildLibs = buildLibs;
 exports.buildDev = buildDev;
+exports.buildElements = buildElements;
 exports.buildDevAll = buildDevAll;

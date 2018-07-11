@@ -6,32 +6,33 @@ if (!(process.env.APP_ROOT_PATH)) {
 
 const argv = require('yargs')
   .option('pkg', { default: null, type: 'string' })
+  .option('elements', { default: null, type: 'string' })
   .argv;
 
 const prodModeParams = [ '--prod',  '--prod=true',  '--prod true'  ];
 
 const { isProcess } = require('@ngx-devtools/common');
 
-const { attachedToIndexHtml  } = require('./utils/systemjs-script-min');
-const { bundle, bundlePackage, bundleFiles, buildDev, buildDevAll, buildDevPackage  } = require('./bundle');
 const { onClientFileChanged } = require('./utils/on-changed');
+const { buildProdPackage, buildProdElementsArgv, buildProdAll, buildDev, buildDevAll } = require('./bundle');
 
 const vendorBundle = require('./utils/vendor-bundle');
 
 const bundlProd = () => 
-   (argv.pkg 
-      ? bundlePackage(argv.pkg, 'dist')
-      : bundleFiles())
+  (argv.pkg 
+    ? buildProdPackage(argv.pkg, 'dist')
+    : (!(argv.elements === null))
+      ? buildProdElementsArgv()
+      : buildProdAll()
+   );
 
 const build = (isProcess(prodModeParams)) 
   ? bundlProd 
   : (argv.pkg 
-      ? () => buildDevPackage(argv.pkg, 'dist')
-      : buildDevAll);
+    ? () => buildDev(argv.pkg, 'dist')
+    : buildDevAll);
 
-exports.bundle = bundle;
 exports.build = build;
 exports.buildDev = buildDev;
 exports.onClientFileChanged = onClientFileChanged;
 exports.vendorBundle = vendorBundle;
-exports.attachedToIndexHtml = attachedToIndexHtml;
