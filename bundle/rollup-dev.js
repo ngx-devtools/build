@@ -5,6 +5,7 @@ const { rollup } = require('rollup');
 
 const typescript = require('rollup-plugin-typescript2');
 const multiEntry = require('rollup-plugin-multi-entry');
+const depsResolve = require('rollup-plugin-node-resolve');
 
 const { configs } = require('./rollup.config');
 
@@ -30,7 +31,8 @@ const rollupDev = (src, dest, options = {}) => {
         useTsconfigDeclarationDir: true,
         check: false,
         cacheRoot: join(process.env.APP_ROOT_PATH, 'node_modules/.tmp/.rts2_cache')
-      })
+      }),
+      depsResolve()
     ],
     onwarn: configs.onwarn,
     ...options.input
