@@ -2,7 +2,7 @@
   "name": "@ngx-devtools/build",
   "version": "1.10.0-beta.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/build.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aelbore/ngx-build.git"
@@ -14,8 +14,8 @@
   },
   "homepage": "https://github.com/aelbore/ngx-build#readme",
   "peerDependencies": {
-    "@angular/compiler": "6.0.7",
-    "@angular/compiler-cli": "6.0.7"
+    "@angular/compiler": "6.0.9",
+    "@angular/compiler-cli": "6.0.9"
   },
   "dependencies": {
     "@ngx-devtools/common": "beta",
@@ -28,7 +28,9 @@
     "systemjs-builder": "0.16.13"
   },
   "devDependencies": {
-    "@angular/compiler": "6.0.7",
-    "@angular/compiler-cli": "6.0.7"
-  }
+    "@angular/compiler": "6.0.9",
+    "@angular/compiler-cli": "6.0.9",
+    "ts-node": "7.0.0"
+  },
+  "typings": "dist/build.d.ts"
 }
