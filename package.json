@@ -3,6 +3,9 @@
   "version": "1.10.0-beta.0",
   "description": "",
   "main": "dist/build.js",
+  "scripts": {
+    "ts-node": "./node_modules/.bin/ts-node build.ts"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/aelbore/ngx-build.git"
