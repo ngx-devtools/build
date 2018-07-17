@@ -1,11 +1,12 @@
 import { sep, join, basename, dirname } from 'path';
+import { rollup } from 'rollup';
 
-import { inlineResource, globFiles, rollupBuild, createRollupConfig } from '@ngx-devtools/common';
+import { inlineResource, globFiles, createRollupConfig, mkdirp, writeFileAsync } from '@ngx-devtools/common';
 
 import { readPackageFile } from './read-package-file';
 import { configs } from './rollup-config';
 
-const getTempPath = (file: string, pkgName: string) => {
+function getTempPath(file: string, pkgName: string){
   const tempSource = `.tmp\/${pkgName}\/src`;
   return file.replace(process.env.APP_ROOT_PATH + sep, '') 
     .replace('src' + sep, '')
@@ -13,6 +14,18 @@ const getTempPath = (file: string, pkgName: string) => {
     .replace('libs' + sep, '')
     .replace(join(pkgName, 'src'), tempSource)
     .replace(`app`, tempSource);
+}
+
+async function rollBuildDev({ inputOptions, outputOptions }) {
+  return rollup(inputOptions)
+  .then(bundle => bundle.generate(outputOptions))
+  .then(({ code, map }) => {
+    mkdirp(dirname(outputOptions.file));
+    return Promise.all([ 
+      writeFileAsync(outputOptions.file, code + `\n//# sourceMappingURL=${basename(outputOptions.file)}.map`),
+      writeFileAsync(outputOptions.file + '.map', map.toString())
+    ])
+  });
 }
 
 async function rollupDev(src: any, dest: string, options?: any){ 
@@ -23,7 +36,7 @@ async function rollupDev(src: any, dest: string, options?: any){
     ? options.output.file
     : join(src.replace('.tmp', dest), 'bundles', `${pkgName}.umd.js`);
 
-  const rollConfig = createRollupConfig({
+  const rollupConfig = createRollupConfig({
     input: entry,
     overrideExternal: true,
     external: configs.inputOptions.external,
@@ -36,8 +49,7 @@ async function rollupDev(src: any, dest: string, options?: any){
     }
   })
 
-  return rollupBuild(rollConfig)
-    .catch(error => console.error(error));
+  return rollBuildDev(rollupConfig);
 }
 
 async function inlineSources(src: string | string[], pkgName: string){
@@ -54,4 +66,4 @@ async function buildDev(src: string, dest: string) {
     .then(tmpSrc => rollupDev(tmpSrc, dest))
 }
 
-export { buildDev, inlineSources, getTempPath, rollupDev }
+export { buildDev, inlineSources, getTempPath, rollupDev, rollBuildDev }
