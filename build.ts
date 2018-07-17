@@ -2,15 +2,18 @@ import { buildCopyPackageFile, rollupBuild, createRollupConfig, clean } from '@n
 
 const PKG_NAME = 'build';
 
-const rollupConfig = { 
+const rollupConfig = createRollupConfig({ 
   input: `src/${PKG_NAME}.ts`, 
-  file: `dist/${PKG_NAME}.js`, 
-  format: 'cjs',
+  tsconfig: 'src/tsconfig.json',
   external: [ 
     '@ngx-devtools/common' 
-  ]
-};
+  ],
+  output: {
+    file: `dist/${PKG_NAME}.js`, 
+    format: 'cjs'
+  }
+})
 
 Promise.all([ clean('dist') ]).then(() => {
-  return Promise.all([ buildCopyPackageFile(PKG_NAME), rollupBuild(createRollupConfig(rollupConfig)) ])
+  return Promise.all([ buildCopyPackageFile(PKG_NAME), rollupBuild(rollupConfig) ])
 });
