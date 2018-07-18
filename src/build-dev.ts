@@ -4,6 +4,7 @@ import { rollup } from 'rollup';
 import { inlineResource, globFiles, createRollupConfig, mkdirp, writeFileAsync } from '@ngx-devtools/common';
 
 import { readPackageFile } from './read-package-file';
+import { getSrcDirectories } from './directories';
 import { configs } from './rollup-config';
 
 function getTempPath(file: string, pkgName: string){
@@ -66,4 +67,13 @@ async function buildDev(src: string, dest: string) {
     .then(tmpSrc => rollupDev(tmpSrc, dest))
 }
 
-export { buildDev, inlineSources, getTempPath, rollupDev, rollBuildDev }
+async function buildElements(src: string) {
+  const packages = await getSrcDirectories(src);
+  return Promise.all(packages.map(pkg => {
+    return readPackageFile(pkg.src)
+      .then(pkgName => inlineSources(pkg.src, pkgName))
+      .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
+  }))
+} 
+
+export { buildDev, inlineSources, getTempPath, rollupDev, rollBuildDev, buildElements }
