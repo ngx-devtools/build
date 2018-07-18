@@ -1,7 +1,6 @@
 import { sep, join, basename, dirname } from 'path';
-import { rollup } from 'rollup';
 
-import { inlineResource, globFiles, createRollupConfig, mkdirp, writeFileAsync } from '@ngx-devtools/common';
+import { inlineResource, globFiles, createRollupConfig, rollBuildDev } from '@ngx-devtools/common';
 
 import { readPackageFile } from './read-package-file';
 import { getSrcDirectories } from './directories';
@@ -17,17 +16,11 @@ function getTempPath(file: string, pkgName: string){
     .replace(`app`, tempSource);
 }
 
-async function rollBuildDev({ inputOptions, outputOptions }) {
-  return rollup(inputOptions)
-  .then(bundle => bundle.generate(outputOptions))
-  .then(({ code, map }) => {
-    mkdirp(dirname(outputOptions.file));
-    return Promise.all([ 
-      writeFileAsync(outputOptions.file, code + `\n//# sourceMappingURL=${basename(outputOptions.file)}.map`),
-      writeFileAsync(outputOptions.file + '.map', map.toString())
-    ])
-  });
-}
+function getSourceFile(src){
+  return src.includes('package.json') 
+    ? join(dirname(src), '**/*.ts').split(sep).join('/')
+    : src; 
+};
 
 async function rollupDev(src: any, dest: string, options?: any){ 
   const entry = Array.isArray(src) ? src : join(src, 'src', 'index.ts');
@@ -54,26 +47,51 @@ async function rollupDev(src: any, dest: string, options?: any){
 }
 
 async function inlineSources(src: string | string[], pkgName: string){
-  return globFiles(src).then(files => {
+  return globFiles(getSourceFile(src)).then(files => {
     return Promise.all(files.map(file => { 
       return inlineResource(file, getTempPath(file, pkgName)) 
     }))
   }).then(() => join('.tmp', pkgName))
 }
 
-async function buildDev(src: string, dest: string) {
+async function buildDev(src: string, dest: string){
   return readPackageFile(src)
     .then(pkgName => inlineSources(src, pkgName))
     .then(tmpSrc => rollupDev(tmpSrc, dest))
 }
 
-async function buildElements(src: string) {
+async function buildElements(src: string, dest?: string){
   const packages = await getSrcDirectories(src);
   return Promise.all(packages.map(pkg => {
     return readPackageFile(pkg.src)
       .then(pkgName => inlineSources(pkg.src, pkgName))
       .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
   }))
-} 
+  .then(inputs => {
+    const elements = basename(src), destPath = dest || 'dist';
+    return rollupDev(inputs, destPath, {
+      output: { name: elements, file: join(destPath, elements, 'bundles', `${elements}.umd.js`) }
+    })
+  })
+}
 
-export { buildDev, inlineSources, getTempPath, rollupDev, rollBuildDev, buildElements }
+async function buildLibs(src: string, dest?: string){
+  const packages = await getSrcDirectories(src);
+  return Promise.all(packages.map(pkg => {
+    return buildDev(pkg.src, dest || pkg.dest);
+  }))
+}
+
+async function buildApp(src?: string, dest?: string){
+  const options = {
+    src: src || join('src', 'app', 'package.json'),
+    dest: dest || 'dist'
+  };
+  return buildDev(options.src, options.dest);
+}
+
+async function buildAll(){
+  return Promise.all([ buildElements('src/elements'), buildLibs('src/libs'), buildApp() ])
+}
+
+export { buildDev, inlineSources, getTempPath, rollupDev, buildElements, buildLibs, buildApp, buildAll }
