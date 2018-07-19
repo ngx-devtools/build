@@ -6,6 +6,12 @@ import { readPackageFile } from './read-package-file';
 import { getSrcDirectories } from './directories';
 import { configs } from './rollup-config';
 
+interface BuildElementOptions {
+  src: string;
+  dest?: string;
+  packages?: string[];
+}
+
 function getTempPath(file: string, pkgName: string){
   const tempSource = `.tmp\/${pkgName}\/src`;
   return file.replace(process.env.APP_ROOT_PATH + sep, '') 
@@ -21,6 +27,15 @@ function getSourceFile(src){
     ? join(dirname(src), '**/*.ts').split(sep).join('/')
     : src; 
 };
+
+async function getPackages(options: BuildElementOptions){
+  return (options.packages) ? options.packages.map(pkg => { 
+      return {
+        src: join(options.src, pkg, 'package.json'),
+        dest: options.dest || 'dist'
+      }
+  }): await getSrcDirectories(options.src);
+}
 
 async function rollupDev(src: any, dest: string, options?: any){ 
   const entry = Array.isArray(src) ? src : join(src, 'src', 'index.ts');
@@ -60,29 +75,29 @@ async function buildDev(src: string, dest: string){
     .then(tmpSrc => rollupDev(tmpSrc, dest))
 }
 
-async function buildElements(src: string, dest?: string){
-  const packages = await getSrcDirectories(src);
+async function buildDevElements(options: BuildElementOptions) {
+  const packages = await getPackages(options);
   return Promise.all(packages.map(pkg => {
     return readPackageFile(pkg.src)
       .then(pkgName => inlineSources(pkg.src, pkgName))
       .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
   }))
   .then(inputs => {
-    const elements = basename(src), destPath = dest || 'dist';
+    const elements = basename(options.src), destPath = options.dest || 'dist';
     return rollupDev(inputs, destPath, {
       output: { name: elements, file: join(destPath, elements, 'bundles', `${elements}.umd.js`) }
     })
   })
 }
 
-async function buildLibs(src: string, dest?: string){
+async function buildDevLibs(src: string, dest?: string){
   const packages = await getSrcDirectories(src);
   return Promise.all(packages.map(pkg => {
     return buildDev(pkg.src, dest || pkg.dest);
   }))
 }
 
-async function buildApp(src?: string, dest?: string){
+async function buildDevApp(src?: string, dest?: string){
   const options = {
     src: src || join('src', 'app', 'package.json'),
     dest: dest || 'dist'
@@ -90,8 +105,8 @@ async function buildApp(src?: string, dest?: string){
   return buildDev(options.src, options.dest);
 }
 
-async function buildAll(){
-  return Promise.all([ buildElements('src/elements'), buildLibs('src/libs'), buildApp() ])
+async function buildDevAll(){
+  return Promise.all([ buildDevElements({ src: 'src/elements' }), buildDevLibs('src/libs'), buildDevApp() ])
 }
 
-export { buildDev, inlineSources, getTempPath, rollupDev, buildElements, buildLibs, buildApp, buildAll }
+export { buildDev, inlineSources, getTempPath, rollupDev, buildDevElements, BuildElementOptions, buildDevLibs, buildDevApp, buildDevAll }

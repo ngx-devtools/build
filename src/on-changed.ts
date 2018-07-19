@@ -1,4 +1,4 @@
-import { buildElements, buildApp, buildDev } from './build-dev';
+import { buildDevElements, buildDevApp, buildDev } from './build-dev';
 import { resolve, join, sep } from 'path';
 import { copyFileAsync, injectHtml } from '@ngx-devtools/common';
 
@@ -32,9 +32,9 @@ function getPaths(sources: string[], count: number) {
 async function build(src: string){
   const sources = src.split(sep);
   const buildClient = { 
-    app: src => buildApp(),
+    app: src => buildDevApp(),
     libs: src => buildDev(join(...getPaths(sources, 3), 'package.json'), 'dist'),
-    elements: src => buildElements(join(...getPaths(sources, 2)))
+    elements: src => buildDevElements({ src: join(...getPaths(sources, 2)) })
   }
   return buildClient[sources[1]](src);
 }
