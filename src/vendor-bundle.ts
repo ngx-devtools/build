@@ -1,5 +1,6 @@
 import { concat, clean, minify, writeFileAsync, mkdirp } from '@ngx-devtools/common';
 import { dirname } from 'path';
+import { bundleRxjs } from './bundle-rxjs';
 
 const angularFiles = [
   'core/bundles/core.umd.min.js',
@@ -38,7 +39,7 @@ async function minifyVendors(files: MinifyOptions[]){
   return Promise.all(files.map(file => {
     return minify(file.src).then(content => {
       mkdirp(dirname(file.dest));
-      return writeFileAsync(file.dest, content);
+      return writeFileAsync(file.dest, content.code);
     })
   }))
 }
@@ -47,8 +48,9 @@ async function vendorBundle(dest: string) {
   return clean(dest)
     .then(() => minifyVendors(minifyVendorsFiles))
     .then(() => Promise.all([ 
+      bundleRxjs(),
       concat(angularFiles.map(file => `node_modules/@angular/${file}`), `${dest}/angular.min.js`), 
-      concat(shimsFiles, `${dest}/shims.min.js`) 
+      concat(shimsFiles, `${dest}/shims.min.js`)
     ]))
 }
 
