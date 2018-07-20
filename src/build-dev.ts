@@ -1,6 +1,6 @@
 import { sep, join, basename, dirname } from 'path';
 
-import { inlineResource, globFiles, createRollupConfig, rollBuildDev } from '@ngx-devtools/common';
+import { inlineResource, globFiles, createRollupConfig, rollupGenerate } from '@ngx-devtools/common';
 
 import { readPackageFile } from './read-package-file';
 import { getSrcDirectories } from './directories';
@@ -58,7 +58,7 @@ async function rollupDev(src: any, dest: string, options?: any){
     }
   })
 
-  return rollBuildDev(rollupConfig);
+  return rollupGenerate(rollupConfig);
 }
 
 async function inlineSources(src: string | string[], pkgName: string){
@@ -69,20 +69,23 @@ async function inlineSources(src: string | string[], pkgName: string){
   }).then(() => join('.tmp', pkgName))
 }
 
+async function inlineElementResources(options: BuildElementOptions){
+  const packages = await getPackages(options);
+  return Promise.all(packages.map(pkg => {
+    return readPackageFile(pkg.src)
+      .then(pkgName => inlineSources(pkg.src, pkgName))
+      .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
+  }));
+}
+
 async function buildDev(src: string, dest: string){
   return readPackageFile(src)
     .then(pkgName => inlineSources(src, pkgName))
     .then(tmpSrc => rollupDev(tmpSrc, dest))
 }
 
-async function buildDevElements(options: BuildElementOptions) {
-  const packages = await getPackages(options);
-  return Promise.all(packages.map(pkg => {
-    return readPackageFile(pkg.src)
-      .then(pkgName => inlineSources(pkg.src, pkgName))
-      .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
-  }))
-  .then(inputs => {
+async function buildDevElements(options: BuildElementOptions){
+  return inlineElementResources(options).then(inputs => {
     const elements = basename(options.src), destPath = options.dest || 'dist';
     return rollupDev(inputs, destPath, {
       output: { name: elements, file: join(destPath, elements, 'bundles', `${elements}.umd.js`) }
@@ -109,4 +112,16 @@ async function buildDevAll(){
   return Promise.all([ buildDevElements({ src: 'src/elements' }), buildDevLibs('src/libs'), buildDevApp() ])
 }
 
-export { buildDev, inlineSources, getTempPath, rollupDev, buildDevElements, BuildElementOptions, buildDevLibs, buildDevApp, buildDevAll }
+export { 
+  buildDev, 
+  inlineSources, 
+  getTempPath, 
+  rollupDev, 
+  buildDevElements, 
+  BuildElementOptions, 
+  buildDevLibs,
+  buildDevApp, 
+  buildDevAll,
+  getPackages,
+  inlineElementResources
+}

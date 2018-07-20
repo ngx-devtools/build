@@ -1,4 +1,4 @@
-import { buildCopyPackageFile, rollupBuild, createRollupConfig, clean } from '@ngx-devtools/common';
+const { buildCopyPackageFile, rollupBuild, createRollupConfig, clean } =  require('@ngx-devtools/common');
 
 const PKG_NAME = 'build';
 
