@@ -1,5 +1,5 @@
-import { concat, clean, minify, writeFileAsync, mkdirp } from '@ngx-devtools/common';
-import { dirname } from 'path';
+import { concat, clean, minify, writeFileAsync, mkdirp, minifyContent } from '@ngx-devtools/common';
+import { dirname, join } from 'path';
 import { bundleRxjs } from './bundle-rxjs';
 
 const angularFiles = [
@@ -30,6 +30,32 @@ const shimsFiles = [
   'node_modules/zone.js/dist/zone.min.js'
 ];
 
+const systemjsScripts = `
+  (() => {
+    const importComponents = (files) => {
+      return files.reduce((promise, file) => {
+          switch(typeof file){
+            case "string":
+              return promise.then(() => System.import(file));
+            case "object":
+              if(Array.isArray(file)){
+                return promise.then(() => Promise.all(file.map(fileMap => System.import(fileMap))));
+              }
+          }
+      }, Promise.resolve());
+    }
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        System.config(data.config);
+        const vendors = data.vendors, components = data.components;
+        return Promise.all(vendors.map(vendor => System.import(vendor)))
+            .then(() => importComponents(components))
+      })
+      .catch((e) => { console.error(e.stack || e) })
+  })();
+`
+
 interface MinifyOptions {
   src: string;
   dest: string;
@@ -44,13 +70,22 @@ async function minifyVendors(files: MinifyOptions[]){
   }))
 }
 
+async function minifySystemJs(dest: string){
+  return minifyContent(systemjsScripts).then(content => {
+    const destPath = join(process.env.APP_ROOT_PATH, dest, 'systemjs-script.min.js');
+    mkdirp(dirname(destPath));
+    return writeFileAsync(destPath, content.code);
+  })
+}
+
 async function vendorBundle(dest: string) {
   return clean(dest)
     .then(() => minifyVendors(minifyVendorsFiles))
     .then(() => Promise.all([ 
       bundleRxjs(),
       concat(angularFiles.map(file => `node_modules/@angular/${file}`), `${dest}/angular.min.js`), 
-      concat(shimsFiles, `${dest}/shims.min.js`)
+      concat(shimsFiles, `${dest}/shims.min.js`),
+      minifySystemJs(dest)
     ]))
 }
 
