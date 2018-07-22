@@ -1,6 +1,6 @@
 {
   "name": "@ngx-devtools/build",
-  "version": "2.0.0-beta.1",
+  "version": "2.0.0-beta.2",
   "description": "",
   "main": "dist/build.js",
   "scripts": {
