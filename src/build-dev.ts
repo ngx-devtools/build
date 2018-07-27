@@ -1,10 +1,12 @@
-import { sep, join, basename, dirname } from 'path';
+import { sep, join, basename, dirname, resolve } from 'path';
+import { existsSync } from 'fs';
 
 import { inlineResource, globFiles, createRollupConfig, rollupGenerate } from '@ngx-devtools/common';
 
 import { readPackageFile } from './read-package-file';
 import { getSrcDirectories } from './directories';
 import { configs } from './rollup-config';
+import { overrideRollupConfig } from './rollup-plugin-external';
 
 interface BuildElementOptions {
   src: string;
@@ -45,7 +47,7 @@ async function rollupDev(src: any, dest: string, options?: any){
     ? options.output.file
     : join(src.replace('.tmp', dest), 'bundles', `${pkgName}.umd.js`);
 
-  const rollupConfig = createRollupConfig({
+  const rollupConfig = await overrideRollupConfig(createRollupConfig({
     input: entry,
     overrideExternal: true,
     external: configs.inputOptions.external,
@@ -56,7 +58,7 @@ async function rollupDev(src: any, dest: string, options?: any){
       dir: dirname(file),
       ...configs.outputOptions,
     }
-  })
+  }));
 
   return rollupGenerate(rollupConfig);
 }
@@ -85,7 +87,11 @@ async function buildDev(src: string, dest: string){
 }
 
 async function buildDevElements(options: BuildElementOptions){
+  if (!(existsSync(join(resolve(), options.src)))) {
+    return Promise.resolve();
+  }
   return inlineElementResources(options).then(inputs => {
+    console.log(inputs);
     const elements = basename(options.src), destPath = options.dest || 'dist';
     return rollupDev(inputs, destPath, {
       output: { name: elements, file: join(destPath, elements, 'bundles', `${elements}.umd.js`) }
@@ -105,11 +111,12 @@ async function buildDevApp(src?: string, dest?: string){
     src: src || join('src', 'app', 'package.json'),
     dest: dest || 'dist'
   };
+  
   return buildDev(options.src, options.dest);
 }
 
 async function buildDevAll(){
-  return Promise.all([ buildDevElements({ src: 'src/elements' }), buildDevLibs('src/libs'), buildDevApp() ])
+  return Promise.all([ buildDevElements({ src: 'src/elements' }), buildDevLibs('src/libs'),  buildDevApp() ])
 }
 
 export { 

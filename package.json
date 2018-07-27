@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@ngx-devtools/common": "beta",
+    "rollup-plugin-commonjs": "9.1.3",
     "systemjs-builder": "0.16.13"
   },
   "devDependencies": {
