@@ -1,12 +1,15 @@
 import { sep, join, basename, dirname, resolve } from 'path';
 import { existsSync } from 'fs';
 
-import { inlineResource, globFiles, createRollupConfig, rollupGenerate } from '@ngx-devtools/common';
+import { inlineResource, globFiles, createRollupConfig, rollupGenerate, commonjs } from '@ngx-devtools/common';
 
 import { readPackageFile } from './read-package-file';
 import { getSrcDirectories } from './directories';
 import { configs } from './rollup-config';
-import { overrideRollupConfig } from './rollup-plugin-external';
+
+if (!(process.env.APP_ROOT_PATH)) {
+  process.env.APP_ROOT_PATH = resolve();
+}
 
 interface BuildElementOptions {
   src: string;
@@ -47,7 +50,7 @@ async function rollupDev(src: any, dest: string, options?: any){
     ? options.output.file
     : join(src.replace('.tmp', dest), 'bundles', `${pkgName}.umd.js`);
 
-  const rollupConfig = await overrideRollupConfig(createRollupConfig({
+  const rollupConfig = createRollupConfig({
     input: entry,
     overrideExternal: true,
     external: configs.inputOptions.external,
@@ -58,7 +61,7 @@ async function rollupDev(src: any, dest: string, options?: any){
       dir: dirname(file),
       ...configs.outputOptions,
     }
-  }));
+  });
 
   return rollupGenerate(rollupConfig);
 }
@@ -87,23 +90,25 @@ async function buildDev(src: string, dest: string){
 }
 
 async function buildDevElements(options: BuildElementOptions){
-  if (!(existsSync(join(resolve(), options.src)))) {
-    return Promise.resolve();
-  }
-  return inlineElementResources(options).then(inputs => {
-    console.log(inputs);
-    const elements = basename(options.src), destPath = options.dest || 'dist';
-    return rollupDev(inputs, destPath, {
-      output: { name: elements, file: join(destPath, elements, 'bundles', `${elements}.umd.js`) }
-    })
-  })
+  return existsSync(join(process.env.APP_ROOT_PATH, options.src))
+    ? inlineElementResources(options).then(inputs => {
+        const elements = basename(options.src), destPath = options.dest || 'dist';
+        return rollupDev(inputs, destPath, {
+          output: { name: elements, file: join(destPath, elements, 'bundles', `${elements}.umd.js`) }
+        })
+      })
+    : Promise.resolve();
 }
 
 async function buildDevLibs(src: string, dest?: string){
-  const packages = await getSrcDirectories(src);
-  return Promise.all(packages.map(pkg => {
-    return buildDev(pkg.src, dest || pkg.dest);
-  }))
+  return existsSync(join(process.env.APP_ROOT_PATH, src))
+    ? (async function(){
+        const packages = await getSrcDirectories(src);
+        return Promise.all(packages.map(pkg => {
+          return buildDev(pkg.src, dest || pkg.dest);
+        }))
+      })()
+    : Promise.resolve()
 }
 
 async function buildDevApp(src?: string, dest?: string){
@@ -111,7 +116,6 @@ async function buildDevApp(src?: string, dest?: string){
     src: src || join('src', 'app', 'package.json'),
     dest: dest || 'dist'
   };
-  
   return buildDev(options.src, options.dest);
 }
 

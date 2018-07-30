@@ -1,23 +1,9 @@
 import { join, basename, dirname } from 'path';
 
-import { rollupGenerate, createRollupConfig, minifyContent } from '@ngx-devtools/common';
+import { rollupGenerate, createRollupConfig, rollupPluginUglify } from '@ngx-devtools/common';
 import { inlineElementResources, BuildElementOptions } from './build-dev';
 
 import { configs } from './rollup-config';
-
-function uglify(userOptions?: any){
-  const options = Object.assign({ sourceMap: true }, userOptions);
-  return {
-    name: "uglify",
-    transformBundle: async (code) => {
-      const result = await minifyContent(code, options);
-      if (result.error) {
-        throw result.error;
-      }
-      return result;
-    }
-  };
-}
 
 async function rollupProd(src: any, dest: string, options?: any){ 
   const entry = Array.isArray(src) ? src : join(src, 'src', 'index.ts');
@@ -31,9 +17,7 @@ async function rollupProd(src: any, dest: string, options?: any){
     input: entry,
     overrideExternal: true,
     external: [],
-    plugins: [
-      uglify()
-    ],
+    plugins: [ rollupPluginUglify() ],
     output: {
       ...configs.outputOptions,
       file: file,
