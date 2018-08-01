@@ -1,10 +1,15 @@
-import { sep, join, basename, dirname } from 'path';
+import { sep, join, basename, dirname, resolve } from 'path';
+import { existsSync } from 'fs';
 
-import { inlineResource, globFiles, createRollupConfig, rollupGenerate } from '@ngx-devtools/common';
+import { inlineResource, globFiles, createRollupConfig, rollupGenerate, commonjs } from '@ngx-devtools/common';
 
 import { readPackageFile } from './read-package-file';
 import { getSrcDirectories } from './directories';
 import { configs } from './rollup-config';
+
+if (!(process.env.APP_ROOT_PATH)) {
+  process.env.APP_ROOT_PATH = resolve();
+}
 
 interface BuildElementOptions {
   src: string;
@@ -56,7 +61,7 @@ async function rollupDev(src: any, dest: string, options?: any){
       dir: dirname(file),
       ...configs.outputOptions,
     }
-  })
+  });
 
   return rollupGenerate(rollupConfig);
 }
@@ -85,19 +90,25 @@ async function buildDev(src: string, dest: string){
 }
 
 async function buildDevElements(options: BuildElementOptions){
-  return inlineElementResources(options).then(inputs => {
-    const elements = basename(options.src), destPath = options.dest || 'dist';
-    return rollupDev(inputs, destPath, {
-      output: { name: elements, file: join(destPath, elements, 'bundles', `${elements}.umd.js`) }
-    })
-  })
+  return existsSync(join(process.env.APP_ROOT_PATH, options.src))
+    ? inlineElementResources(options).then(inputs => {
+        const elements = basename(options.src), destPath = options.dest || 'dist';
+        return rollupDev(inputs, destPath, {
+          output: { name: elements, file: join(destPath, elements, 'bundles', `${elements}.umd.js`) }
+        })
+      })
+    : Promise.resolve();
 }
 
 async function buildDevLibs(src: string, dest?: string){
-  const packages = await getSrcDirectories(src);
-  return Promise.all(packages.map(pkg => {
-    return buildDev(pkg.src, dest || pkg.dest);
-  }))
+  return existsSync(join(process.env.APP_ROOT_PATH, src))
+    ? (async function(){
+        const packages = await getSrcDirectories(src);
+        return Promise.all(packages.map(pkg => {
+          return buildDev(pkg.src, dest || pkg.dest);
+        }))
+      })()
+    : Promise.resolve()
 }
 
 async function buildDevApp(src?: string, dest?: string){
@@ -109,7 +120,7 @@ async function buildDevApp(src?: string, dest?: string){
 }
 
 async function buildDevAll(){
-  return Promise.all([ buildDevElements({ src: 'src/elements' }), buildDevLibs('src/libs'), buildDevApp() ])
+  return Promise.all([ buildDevElements({ src: 'src/elements' }), buildDevLibs('src/libs'),  buildDevApp() ])
 }
 
 export { 
