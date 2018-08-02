@@ -1,9 +1,12 @@
 import { join, basename, dirname } from 'path';
+import { existsSync } from 'fs';
 
 import { rollupGenerate, createRollupConfig, rollupPluginUglify } from '@ngx-devtools/common';
-import { inlineElementResources, BuildElementOptions } from './build-dev';
+import { inlineElementResources, BuildElementOptions, inlineSources } from './build-dev';
 
 import { configs } from './rollup-config';
+import { getSrcDirectories } from './directories';
+import { readPackageFile } from './read-package-file';
 
 async function rollupProd(src: any, dest: string, options?: any){ 
   const entry = Array.isArray(src) ? src : join(src, 'src', 'index.ts');
@@ -40,4 +43,24 @@ async function buildProdElements(options: BuildElementOptions) {
   })
 }
 
-export { rollupProd, buildProdElements }
+async function buildProd(src: string, dest?: string){
+  return readPackageFile(src)
+    .then(pkgName => inlineSources(src, pkgName))
+    .then(tmpSrc => rollupProd(tmpSrc, dest || 'dist'))
+}
+
+async function buildProdLibs(src: string, dest?: string){
+  return existsSync(join(process.env.APP_ROOT_PATH, src))
+    ? getSrcDirectories(src).then(packages => Promise.all(packages.map(pkg => buildProd(pkg.src))))
+    : Promise.resolve()
+}
+
+async function buildProdApp(src?: string, dest?: string){
+  const options = {
+    src: src || join('src', 'app', 'package.json'),
+    dest: dest || 'dist'
+  };
+  return buildProd(options.src, options.dest)
+}
+
+export { rollupProd, buildProdElements, buildProdLibs, buildProdApp }
