@@ -1,23 +1,31 @@
 import { buildDevElements, buildDevApp, buildDev } from './build-dev';
-import { resolve, join, sep } from 'path';
-import { copyFileAsync, injectHtml } from '@ngx-devtools/common';
+import { resolve, join, sep, dirname } from 'path';
+import { copyFileAsync, injectHtml, mkdirp } from '@ngx-devtools/common';
 
 const folders = [
   'elements',
   'app',
   'libs',
-  'index.html'
+  'index.html',
+  'assets'
 ]
 
 if (!(process.env.APP_ROOT_PATH)) {
   process.env.APP_ROOT_PATH = resolve();
 }
 
+async function copyAssets(src: string, dest: string){
+  mkdirp(dirname(dest));
+  return copyFileAsync(src, dest);
+} 
+
 async function htmlChanged(src: string ){
   const source = join(process.env.APP_ROOT_PATH, src);
   const dest = source.replace('src', 'dist');
   return copyFileAsync(source, dest).then(() => {
-    return injectHtml(dest)
+    return (source.includes('assets'))
+      ? copyAssets(source, dest)
+      : injectHtml(dest)
   })
 }
 
@@ -41,7 +49,7 @@ async function build(src: string){
 
 async function onClientFileChanged(src: string) {
   return (src && folders.find(folder => src.includes(folder))) 
-    ? (src.includes('index.html')) ? htmlChanged(src): build(src)
+    ? (src.includes('index.html') || src.includes('assets')) ? htmlChanged(src): build(src)
     : Promise.resolve();
 }
 
