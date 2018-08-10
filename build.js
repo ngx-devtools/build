@@ -13,20 +13,13 @@ const { resolve, sep, join, extname } = require('path');
 
 (async function(){
   const PKG_NAME = 'build';
-  const entryFile = `.tmp/${PKG_NAME}.ts`;
+  const ENTRY_FILE = `.tmp/${PKG_NAME}.ts`;
 
   const files = await globFiles('src/**/*.*');
 
-  const rootPathSrc = join(resolve(), sep, 'src', sep);
-  const sourceFiles = files.filter(predicateFilter).map(predicateMap).join('\n');
-
-  function predicateFilter(file){
-    return extname(file) === '.ts'
-  }
-
-  function predicateMap(file){
-    return `export * from '${file.replace(rootPathSrc, './').replace('.ts', '')}';`;
-  }
+  const filter = file => extname(file) === '.ts';
+  const map = file => `export * from '${file.replace(join(resolve(), sep, 'src', sep), './').replace('.ts', '')}';`;
+  const sourceFiles = files.filter(filter).map(map).join('\n');
   
   await Promise.all([ clean('.tmp'), clean('dist') ]);
 
@@ -37,12 +30,12 @@ const { resolve, sep, join, extname } = require('path');
       const destPath = file.replace('src', '.tmp');
       return copyFileAsync(file, destPath);
     })),
-    writeFileAsync(entryFile, sourceFiles),
+    writeFileAsync(ENTRY_FILE, sourceFiles),
     buildCopyPackageFile(PKG_NAME)
   ])
   
   const rollupConfig = createRollupConfig({ 
-    input: entryFile, 
+    input: ENTRY_FILE, 
     tsconfig: '.tmp/tsconfig.json',
     external: [ 
       '@ngx-devtools/common'
