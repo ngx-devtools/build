@@ -1,7 +1,7 @@
 import { resolve, dirname, sep, join } from 'path';
 import { existsSync } from 'fs';
 
-import { globFiles, mkdirp, copyFileAsync, createNgRollupConfig, rollupGenerate } from '@ngx-devtools/common';
+import { globFiles, mkdirp, copyFileAsync, rollupGenerate, depsResolve, createNgRollupConfig, rollupPluginUglify } from '@ngx-devtools/common';
 
 import { inlineSources, getPackages, BuildOptions } from './build-dev';
 import { configs } from './rollup-config';
@@ -10,6 +10,8 @@ import { copyPackageFile } from './ng-copy-package-file';
 import { getSrcDirectories } from './directories';
 
 const ngc = require('@angular/compiler-cli/src/main').main; 
+
+const formats = [ 'esm2015', 'esm5', 'umd' ];
 
 async function ngCompile(tmpSrc: string, appFolder = 'main') {
   const tempFolder = resolve(tmpSrc.replace('/**/*.ts', '')).replace('app', appFolder)
@@ -30,15 +32,28 @@ async function ngCopyAssets(tmpSrc: string, dest?: string) {
 
 async function ngRollupProd(tmpSrc: string, dest: string) {
   const options = { inputOptions: { ...configs.inputOptions  }, outputOptions: { ...configs.outputOptions } };
-  const rollupConfigs = createNgRollupConfig(tmpSrc, dest, options);
-  return Promise.all(rollupConfigs.map(rollupConfig => rollupGenerate(rollupConfig)))
+  const rollupConfigs = formats.map(format => {
+    return createNgRollupConfig({ tmpSrc: tmpSrc, dest: dest, format: format, options: options })
+  })
+  return Promise.all(rollupConfigs.map(rollupConfig => rollupGenerate(rollupConfig)));
+}
+
+async function ngRollupProdBundle(tmpSrc: string, dest: string) {
+  const options = { 
+    inputOptions: { ...configs.inputOptions, ...{ external: [], plugins: [ depsResolve(), rollupPluginUglify() ] }  }, 
+    outputOptions: { ...configs.outputOptions, ...{ globals: {} } } 
+  }
+  const rollupConfig = createNgRollupConfig({
+    tmpSrc: tmpSrc, dest: dest, format: 'umd', options: options, minify: true
+  })
+  return rollupGenerate(rollupConfig); 
 }
 
 async function ngBuildProd({ src, dest }) {
   return copyPackageFile(src, dest)
     .then(pkgName => Promise.all([ copyEntry(pkgName), inlineSources(src, pkgName) ]))
     .then(results => ngCompile(results[0]))
-    .then(tmpSrc => Promise.all([ ngCopyAssets(tmpSrc, dest), ngRollupProd(tmpSrc, dest) ]))
+    .then(tmpSrc => Promise.all([ ngCopyAssets(tmpSrc, dest), ngRollupProd(tmpSrc, dest), ngRollupProdBundle(tmpSrc, dest) ]))
 }
 
 async function ngCompileProdApp(src?: string, dest?: string) {
@@ -71,4 +86,4 @@ async function ngCompilePackageLibs(options: BuildOptions) {
     : Promise.resolve();  
 }
 
-export{ ngCompile, ngCopyAssets, ngRollupProd, ngCompileProdApp, ngBuildProd, ngCompileLibs, ngCompilePackageLibs }
+export{ ngCompile, ngCopyAssets, ngRollupProd, ngCompileProdApp, ngBuildProd, ngCompileLibs, ngCompilePackageLibs, ngRollupProdBundle }
