@@ -1,7 +1,7 @@
 import { sep, join, basename, dirname, resolve } from 'path';
 import { existsSync } from 'fs';
 
-import { inlineResource, globFiles, createRollupConfig, rollupGenerate, commonjs } from '@ngx-devtools/common';
+import { inlineResource, globFiles, createRollupConfig, rollupGenerate } from '@ngx-devtools/common';
 
 import { readPackageFile } from './read-package-file';
 import { getSrcDirectories } from './directories';
@@ -11,11 +11,13 @@ if (!(process.env.APP_ROOT_PATH)) {
   process.env.APP_ROOT_PATH = resolve();
 }
 
-interface BuildElementOptions {
+interface BuildOptions {
   src: string;
   dest?: string;
   packages?: string[];
 }
+
+interface BuildElementOptions extends BuildOptions { }
 
 function getTempPath(file: string, pkgName: string){
   const tempSource = `.tmp\/${pkgName}\/src`;
@@ -33,7 +35,7 @@ function getSourceFile(src){
     : src; 
 };
 
-async function getPackages(options: BuildElementOptions){
+async function getPackages(options: BuildOptions){
   return (options.packages) ? options.packages.map(pkg => { 
       return {
         src: join(options.src, pkg, 'package.json'),
@@ -134,5 +136,6 @@ export {
   buildDevApp, 
   buildDevAll,
   getPackages,
-  inlineElementResources
+  inlineElementResources,
+  BuildOptions
 }

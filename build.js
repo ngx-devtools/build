@@ -1,12 +1,12 @@
-const { buildCopyPackageFile, rollupBuild, createRollupConfig, clean, globFiles } =  require('@ngx-devtools/common');
+const { createRollupConfig, ngxBuild } =  require('@ngx-devtools/common');
 
 (async function(){
   const PKG_NAME = 'build';
-  const files = await globFiles('src/**/*.ts');
-
+  const ENTRY_FILE = `.tmp/${PKG_NAME}.ts`;
+  
   const rollupConfig = createRollupConfig({ 
-    input: files, 
-    tsconfig: 'src/tsconfig.json',
+    input: ENTRY_FILE, 
+    tsconfig: '.tmp/tsconfig.json',
     external: [ 
       '@ngx-devtools/common'
     ],
@@ -15,8 +15,6 @@ const { buildCopyPackageFile, rollupBuild, createRollupConfig, clean, globFiles 
       format: 'cjs'
     }
   })
-  
-  Promise.all([ clean('dist') ]).then(() => {
-    return Promise.all([ buildCopyPackageFile(PKG_NAME), rollupBuild(rollupConfig) ])
-  });
-})();
+
+  await ngxBuild(PKG_NAME, rollupConfig);
+})()

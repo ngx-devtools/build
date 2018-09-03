@@ -1,7 +1,7 @@
 import { sep, join, basename } from 'path';
 
 import { readFileAsync  } from '@ngx-devtools/common';
-import { getPkgName } from './pkg-name';
+import { getPkgName } from 'pkg-name';
 
 function getFilePath(src) {
   const source = src.split(sep).join('/').replace('/**/*.ts', '');
@@ -14,4 +14,4 @@ async function readPackageFile(src) {
   });
 };
 
-export { readPackageFile }
+export { readPackageFile, getFilePath }
