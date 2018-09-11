@@ -1,6 +1,6 @@
 {
   "name": "@ngx-devtools/build",
-  "version": "2.0.0-beta.12",
+  "version": "2.0.0-beta.13",
   "description": "",
   "main": "dist/build.js",
   "scripts": {
@@ -18,16 +18,16 @@
   },
   "homepage": "https://github.com/aelbore/ngx-build#readme",
   "peerDependencies": {
-    "@angular/compiler": "6.1.6",
-    "@angular/compiler-cli": "6.1.6"
+    "@angular/compiler": "6.1.7",
+    "@angular/compiler-cli": "6.1.7"
   },
   "dependencies": {
-    "@ngx-devtools/common": "2.0.0-beta.12",
+    "@ngx-devtools/common": "2.0.0-beta.13",
     "systemjs-builder": "0.16.13"
   },
   "devDependencies": {
-    "@angular/compiler": "6.1.6",
-    "@angular/compiler-cli": "6.1.6"
+    "@angular/compiler": "6.1.7",
+    "@angular/compiler-cli": "6.1.7"
   },
   "typings": "dist/build.d.ts"
 }
