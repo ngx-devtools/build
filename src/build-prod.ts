@@ -2,11 +2,15 @@ import { join, basename, dirname } from 'path';
 import { existsSync } from 'fs';
 
 import { rollupGenerate, createRollupConfig, rollupPluginUglify  } from '@ngx-devtools/common';
-import { inlineElementResources, BuildElementOptions, inlineSources } from './build-dev';
+import { inlineElementResources, BuildElementOptions, inlineSources, BuildOptions, getPackages } from './build-dev';
 
 import { configs } from './rollup-config';
-import { getSrcDirectories } from './directories';
 import { readPackageFile } from './read-package-file';
+
+const argv = require('yargs')
+  .option('lib-name', { default: null, type: 'string' })
+  .option('config', { default: null, type: 'string' })
+  .argv;
 
 async function rollupProd(src: any, dest: string, options?: any) { 
   const entry = Array.isArray(src) ? src : join(src, 'src', 'index.ts');
@@ -49,9 +53,21 @@ async function buildProd(src: string, dest?: string) {
     .then(tmpSrc => rollupProd(tmpSrc, dest || 'dist'))
 }
 
-async function buildProdLibs(src: string, dest?: string) {
-  return existsSync(join(process.env.APP_ROOT_PATH, src))
-    ? getSrcDirectories(src).then(packages => Promise.all(packages.map(pkg => buildProd(pkg.src))))
+async function buildProdLibs(options: BuildOptions) {
+  return existsSync(join(process.env.APP_ROOT_PATH, options.src))
+    ? (async function(){
+        const destPath = options.dest || 'dist';
+        const name = argv.libName || argv.config;
+        return (options.packages) 
+          ? inlineElementResources(options).then(inputs => {
+              return rollupProd(inputs, destPath, {
+                output: { name: name, file: join(destPath, name, 'bundles', `${name}.umd.min.js`) }
+              })
+            }) 
+          : getPackages(options).then(packages => {
+              return Promise.all(packages.map(pkg => buildProd(pkg.src, destPath)))
+            })
+      })()
     : Promise.resolve()
 }
 
