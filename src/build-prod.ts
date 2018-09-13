@@ -1,7 +1,7 @@
 import { join, basename, dirname } from 'path';
 import { existsSync } from 'fs';
 
-import { rollupGenerate, createRollupConfig, rollupPluginUglify  } from '@ngx-devtools/common';
+import { rollupGenerate, createRollupConfig, rollupPluginUglify, Devtools  } from '@ngx-devtools/common';
 import { inlineElementResources, BuildElementOptions, inlineSources, BuildOptions, getPackages } from './build-dev';
 
 import { configs } from './rollup-config';
@@ -79,4 +79,30 @@ async function buildProdApp(src?: string, dest?: string) {
   return buildProd(options.src, options.dest)
 }
 
-export { rollupProd, buildProdElements, buildProdLibs, buildProdApp }
+async function buildProdComponents(keys: Array<string>) {
+  return Promise.all(keys.map(key => {
+    const sources = [ 'src/elements', 'src/libs' ];
+    const packages = sources.map(source => {
+      const values = Devtools.config.build.prod[key].filter(lib => {
+        const tempPath = join(source, lib, 'package.json');
+        return existsSync(tempPath);
+      });
+      return (values) ? values.map(value => join(source, value, 'package.json')).join(','): null;
+    })
+    .filter(value => value !== '')
+    .join(',')
+    .split(',')
+    .map(pkg => ({ src: pkg, dest: 'dist' }))
+    return Promise.all(packages.map(pkg => {
+      return readPackageFile(pkg.src)
+        .then(pkgName => inlineSources(pkg.src, pkgName))
+        .then(tmpSrc => join(tmpSrc, 'src', 'index.ts'))
+    })).then(inputs => {
+      return rollupProd(inputs, 'dist', {
+        output: { name: key, file: join('dist', key, 'bundles', `${key}.umd.min.js`) }
+      })
+    })
+  }))        
+}
+
+export { rollupProd, buildProdElements, buildProdLibs, buildProdApp, buildProdComponents }
