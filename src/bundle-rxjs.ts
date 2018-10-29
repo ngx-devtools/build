@@ -3,7 +3,7 @@ const Builder = require('systemjs-builder');
 const promisify = require('util').promisify;
 const fs = require('fs');
 
-module.exports = () => {
+async function bundleRxjs(){
   const options = {
     normalize: true,
     runtime: false,
@@ -42,4 +42,6 @@ module.exports = () => {
           ? code + `\n//# sourceMappingURL=Rx.min.js.map`
           : code);
     });
-};
+}
+
+export { bundleRxjs }
