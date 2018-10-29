@@ -7,9 +7,7 @@ import { readPackageFile } from './read-package-file';
 import { getSrcDirectories } from './directories';
 import { configs } from './rollup-config';
 
-if (!(process.env.APP_ROOT_PATH)) {
-  process.env.APP_ROOT_PATH = resolve();
-}
+process.env.APP_ROOT_PATH = (process.env.APP_ROOT_PATH) ? process.env.APP_ROOT_PATH: resolve();
 
 interface BuildOptions {
   src: string;
@@ -19,7 +17,7 @@ interface BuildOptions {
 
 interface BuildElementOptions extends BuildOptions { }
 
-function getTempPath(file: string, pkgName: string){
+function getTempPath(file: string, pkgName: string) {
   const tempSource = `.tmp\/${pkgName}\/src`;
   return file.replace(process.env.APP_ROOT_PATH + sep, '') 
     .replace('src' + sep, '')
@@ -29,19 +27,24 @@ function getTempPath(file: string, pkgName: string){
     .replace(`app`, tempSource);
 }
 
-function getSourceFile(src){
+function getSourceFile(src) {
   return src.includes('package.json') 
     ? join(dirname(src), '**/*.ts').split(sep).join('/')
     : src; 
 };
 
-async function getPackages(options: BuildOptions){
+async function getPackages(options: BuildOptions) {
   return (options.packages) ? options.packages.map(pkg => { 
       return {
         src: join(options.src, pkg, 'package.json'),
         dest: options.dest || 'dist'
       }
   }): await getSrcDirectories(options.src);
+}
+
+async function overrideRollupConfig() {
+  const rollupConfigPath = join(process.env.APP_ROOT_PATH, 'rollup.config.js');
+  return existsSync(rollupConfigPath) ? import(rollupConfigPath): {};
 }
 
 async function rollupDev(src: any, dest: string, options?: any){ 
@@ -52,16 +55,19 @@ async function rollupDev(src: any, dest: string, options?: any){
     ? options.output.file
     : join(src.replace('.tmp', dest), 'bundles', `${pkgName}.umd.js`);
 
+  const { external, output } = await overrideRollupConfig();
+
   const rollupConfig = createRollupConfig({
     input: entry,
     overrideExternal: true,
-    external: configs.inputOptions.external,
+    external: external ? external: configs.inputOptions.external,
     output: {
       file: file,
       format: 'umd',
       name: pkgName,
       dir: dirname(file),
       ...configs.outputOptions,
+      ...output
     }
   });
 
