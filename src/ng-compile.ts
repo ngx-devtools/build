@@ -9,11 +9,10 @@ import { copyEntry } from './ng-copy-entry-file';
 import { copyPackageFile } from './ng-copy-package-file';
 import { getSrcDirectories } from './directories';
 
-const ngc = require('@angular/compiler-cli/src/main').main; 
-
 const formats = [ 'esm2015', 'esm5', 'umd' ];
 
 async function ngCompile(tmpSrc: string, appFolder = 'main') {
+  const ngc = require('@angular/compiler-cli/src/main').main; 
   const tempFolder = resolve(tmpSrc.replace('/**/*.ts', '')).replace('app', appFolder)
   return Promise.all([
     ngc([ '--project', `${tempFolder}/tsconfig-esm5.json` ]),
